@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YChiasma | Tool Builder</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+
+    header {
+      background-color: #222;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+
+    header p {
+      margin: 0.5rem 0 0;
+      font-size: 1.2rem;
+      color: #bbb;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .project {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .project-content {
+      padding: 1rem;
+    }
+
+    .project-content h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    .project-content p {
+      margin: 0.5rem 0;
+    }
+
+    .project-content a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #222;
+      color: #ccc;
+    }
+
+    footer a {
+      color: #66aaff;
+      text-decoration: none;
+    }
+
+    @media (min-width: 700px) {
+      .project {
+        flex-direction: row;
+      }
+
+      .project img {
+        width: 300px;
+        height: auto;
+        object-fit: cover;
+      }
+
+      .project-content {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>YChiasma</h1>
+    <p>Tool Builder</p>
+  </header>
+
+  <div class="container" id="projects"></div>
+
+  <footer>
+    <p>Contact: <a href="mailto:YChiasma@gmail.com">YChiasma@gmail.com</a> |
+    <a href="https://github.com/YChiasma" target="_blank">GitHub</a></p>
+  </footer>
+
+  <script>
+    const projects = [
+      {
+        name: "yx-combobox",
+        description: "A node package that adds a combobox (autocomplete form element) including backend.",
+        language: "JavaScript",
+        repo: "https://github.com/YChiasma/yx-combobox",
+        image: "https://raw.githubusercontent.com/YChiasma/yx-combobox/refs/heads/main/Screenshot.png"
+      },
+      {
+        name: "OCR_Search",
+        description: "Search for text in images on your computer.",
+        language: "Python",
+        repo: "https://github.com/YChiasma/OCR_Search",
+        image: "https://raw.githubusercontent.com/YChiasma/OCR_Search/refs/heads/main/Screenshot.png"
+      },
+      {
+        name: "Duolingo_Wordbank",
+        description: 'A Greasemonkey script that adds "Show Word Bank" to Duolingo to make copy and pasting easier.',
+        language: "JavaScript",
+        repo: "https://github.com/YChiasma/Duolingo_Wordbank",
+        image: "https://raw.githubusercontent.com/YChiasma/Duolingo_Wordbank/refs/heads/main/Screenshot.png"
+      }
+    ];
+
+    const container = document.getElementById('projects');
+
+    projects.forEach(project => {
+      const div = document.createElement('div');
+      div.className = 'project';
+      div.innerHTML = `
+        <img src="${project.image}" alt="${project.name} screenshot" />
+        <div class="project-content">
+          <h2>${project.name}</h2>
+          <p>${project.description}</p>
+          <p><strong>Language:</strong> ${project.language}</p>
+          <p><a href="${project.repo}" target="_blank">View on GitHub</a></p>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  </script>
+</body>
+</html>
+s
