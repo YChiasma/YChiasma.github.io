@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Game of Life</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #controls-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 10;
+            cursor: move;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #speed-control {
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="controls-panel">
+        <div id="controls">
+            <button onclick="togglePause()" id="pause-btn">Pause</button>
+            <button onclick="clearGrid()">Clear</button>
+            <button onclick="randomizeGrid()">Randomize</button>
+            <span id="pattern-name">Pattern: Dot</span>
+            <div>
+                <button onclick="changePattern(-1)">&lt;</button>
+                <button onclick="changePattern(1)">&gt;</button>
+            </div>
+            <label id="speed-control">Speed: <input type="range" id="speed" min="1" max="60" value="30"></label>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const resolution = 10;
+        const cols = Math.floor(canvas.width / resolution);
+        const rows = Math.floor(canvas.height / resolution);
+
+        let grid = createGrid();
+        let lastFrameTime = 0;
+        let speed = 30;
+        let paused = false;
+
+        const speedInput = document.getElementById("speed");
+        speedInput.addEventListener("input", (e) => {
+            speed = parseInt(e.target.value);
+        });
+
+        const pauseBtn = document.getElementById("pause-btn");
+        function togglePause() {
+            paused = !paused;
+            pauseBtn.textContent = paused ? "Play" : "Pause";
+        }
+        window.togglePause = togglePause;
+
+        const patterns = [
+            { name: "Dot", shape: [[1]] },
+            { name: "Glider SE", shape: [[0, 1, 0], [0, 0, 1], [1, 1, 1]] },
+            { name: "Glider NE", shape: [[1, 1, 1], [0, 0, 1], [1, 0, 0]] },
+            { name: "Glider SW", shape: [[0, 1, 0], [1, 0, 0], [1, 1, 1]] },
+            { name: "Glider NW", shape: [[1, 1, 1], [1, 0, 0], [0, 1, 0]] },
+            { name: "Small Exploder", shape: [[0, 1, 0], [1, 1, 1], [1, 0, 1], [0, 1, 0]] },
+            { name: "Lightweight Spaceship E", shape: [[0, 1, 1, 1, 1], [1, 0, 0, 0, 1], [0, 0, 0, 0, 1], [1, 0, 0, 1, 0]] },
+            { name: "Lightweight Spaceship W", shape: [[1, 1, 1, 1, 0], [1, 0, 0, 0, 1], [1, 0, 0, 0, 0], [0, 1, 0, 0, 1]] },
+            { name: "Lightweight Spaceship S", shape: [[1, 0, 1, 0], [0, 0, 0, 1], [0, 0, 0, 1], [1, 0, 0, 1], [0, 1, 1, 1]] },
+            { name: "Lightweight Spaceship N", shape: [[0, 1, 1, 1], [1, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1], [1, 0, 1, 0]] },
+            { name: "Exploder", shape: [[1, 0, 1, 0, 1], [1, 0, 0, 0, 1], [1, 0, 0, 0, 1], [1, 0, 0, 0, 1], [1, 0, 1, 0, 1]] },
+            { name: "10 Cell Row", shape: [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]] },
+            { name: "Pulsar", shape: [
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,1],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,1,1,1,0,0,0,1,1,1,0,0]
+            ] },
+            { name: "Drag to save new pattern", shape: []}
+        ];
+
+        let currentPatternIndex = 0;
+        let mouseX = 0, mouseY = 0;
+        let isSelecting = false;
+        let selectionStart = null;
+
+        function createGrid() {
+            return new Array(rows).fill(null).map(() => new Array(cols).fill(0));
+        }
+        window.createGrid = createGrid;
+
+        function randomizeGrid() {
+            grid = grid.map(row => row.map(() => Math.random() > 0.8 ? 1 : 0));
+        }
+        window.randomizeGrid = randomizeGrid;
+
+        function drawGrid(grid) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            grid.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        ctx.fillStyle = "#00FF00";
+                        ctx.fillRect(x * resolution, y * resolution, resolution, resolution);
+                    }
+                });
+            });
+            drawPreview(mouseX, mouseY);
+            if (isSelecting && selectionStart) {
+                const endX = mouseX;
+                const endY = mouseY;
+                ctx.strokeStyle = "rgba(0,255,255,0.8)";
+                ctx.lineWidth = 1;
+                ctx.strokeRect(
+                    Math.min(selectionStart.x, endX) * resolution,
+                    Math.min(selectionStart.y, endY) * resolution,
+                    (Math.abs(endX - selectionStart.x) + 1) * resolution,
+                    (Math.abs(endY - selectionStart.y) + 1) * resolution
+                );
+            }
+        }
+
+        function nextGeneration(grid) {
+            const newGrid = createGrid();
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const neighbors = countNeighbors(grid, x, y);
+                    const cell = grid[y][x];
+                    if (cell === 1 && (neighbors === 2 || neighbors === 3)) {
+                        newGrid[y][x] = 1;
+                    } else if (cell === 0 && neighbors === 3) {
+                        newGrid[y][x] = 1;
+                    }
+                }
+            }
+            return newGrid;
+        }
+
+        function countNeighbors(grid, x, y) {
+            let sum = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue;
+                    const col = (x + j + cols) % cols;
+                    const row = (y + i + rows) % rows;
+                    sum += grid[row][col];
+                }
+            }
+            return sum;
+        }
+
+        function clearGrid() {
+            grid = createGrid();
+        }
+        window.clearGrid = clearGrid;
+
+        function stampPattern(x, y, pattern) {
+            pattern.forEach((row, dy) => {
+                row.forEach((cell, dx) => {
+                    const px = (x + dx) % cols;
+                    const py = (y + dy) % rows;
+                    grid[py][px] = cell;
+                });
+            });
+        }
+
+        function drawPreview(x, y) {
+            if (paused) return;
+            const pattern = patterns[currentPatternIndex].shape;
+            ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+            pattern.forEach((row, dy) => {
+                row.forEach((cell, dx) => {
+                    if (cell) {
+                        ctx.fillRect((x + dx) * resolution, (y + dy) * resolution, resolution, resolution);
+                    }
+                });
+            });
+        }
+
+        function changePattern(delta) {
+            currentPatternIndex = (currentPatternIndex + delta + patterns.length) % patterns.length;
+            document.getElementById("pattern-name").textContent = "Pattern: " + patterns[currentPatternIndex].name;
+        }
+        window.changePattern = changePattern;
+
+        canvas.addEventListener("mousedown", (e) => {
+              if (e.shiftKey || currentPatternIndex == patterns.indexOf(patterns.find(x => x.name == "Drag to save new pattern"))) {
+                isSelecting = true;
+                selectionStart = {
+                    x: Math.floor(e.clientX / resolution),
+                    y: Math.floor(e.clientY / resolution)
+                };
+            }
+        });
+
+        canvas.addEventListener("mouseup", (e) => {
+            if (isSelecting && selectionStart) {
+                const endX = Math.floor(e.clientX / resolution);
+                const endY = Math.floor(e.clientY / resolution);
+                const minX = Math.min(selectionStart.x, endX);
+                const minY = Math.min(selectionStart.y, endY);
+                const maxX = Math.max(selectionStart.x, endX);
+                const maxY = Math.max(selectionStart.y, endY);
+
+                const newShape = [];
+                for (let y = minY; y <= maxY; y++) {
+                    const row = [];
+                    for (let x = minX; x <= maxX; x++) {
+                        row.push(grid[y % rows][x % cols]);
+                    }
+                    newShape.push(row);
+                }
+                patterns.push({
+                    name: `Custom Stamp ${patterns.filter(p => p.name.startsWith('Custom Stamp')).length + 1}`,
+                    shape: newShape
+                });
+                changePattern(patterns.length - currentPatternIndex - 1);
+            }
+            isSelecting = false;
+            selectionStart = null;
+        });
+
+        canvas.addEventListener("click", (e) => {
+            if (isSelecting) return;
+            const x = Math.floor(e.clientX / resolution);
+            const y = Math.floor(e.clientY / resolution);
+            stampPattern(x, y, patterns[currentPatternIndex].shape);
+            drawGrid(grid);
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            mouseX = Math.floor(e.clientX / resolution);
+            mouseY = Math.floor(e.clientY / resolution);
+        });
+
+        window.addEventListener("wheel", (e) => {
+            changePattern(e.deltaY > 0 ? 1 : -1);
+        });
+
+        function update(timestamp) {
+            if (!paused && timestamp - lastFrameTime > (1000 / speed)) {
+                grid = nextGeneration(grid);
+                drawGrid(grid);
+                lastFrameTime = timestamp;
+            } else if (paused) {
+                drawGrid(grid);
+            }
+            requestAnimationFrame(update);
+        }
+
+        const controlsPanel = document.getElementById("controls-panel");
+        let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+
+        controlsPanel.addEventListener("mousedown", (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                isDragging = true;
+                dragOffsetX = e.clientX - controlsPanel.offsetLeft;
+                dragOffsetY = e.clientY - controlsPanel.offsetTop;
+            }
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                controlsPanel.style.left = `${e.clientX - dragOffsetX}px`;
+                controlsPanel.style.top = `${e.clientY - dragOffsetY}px`;
+            }
+        });
+
+        randomizeGrid();
+        requestAnimationFrame(update);
+    });
+    </script>
+</body>
+</html>
