@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- You have enough to do. Start Doing. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doing List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .current-doing {
+            background: #e0f7fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .current-doing span {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .current-doing button {
+            margin-left: 0.5rem;
+        }
+
+        .new-task {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f1f1;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .todo-item span {
+            flex-grow: 1;
+        }
+
+        .todo-item button {
+            height: 2.5em;
+            margin-left: 0.5rem;
+        }
+
+        .history {
+            margin-top: 2rem;
+        }
+
+        .history h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-entry {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="text"] {
+            padding: 0.5rem;
+            width: 60%;
+            margin-right: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .menu {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .menu button {
+            margin: 0 0.5rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .hamburger {
+            font-size: 1.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dropdown {
+            display: none;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown button {
+            display: block;
+            margin: 0.25rem auto;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            /* space-between; */
+            position: relative;
+            /**/
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            z-index: 1;
+            /**/
+        }
+
+        .menu {
+            position: absolute;
+            /* relative; */
+            right: 0;
+            /**/
+        }
+
+        .hamburger {
+            font-size: 1.5rem;
+            cursor: pointer;
+            user-select: none;
+            padding: 0.25rem;
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 2rem;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            color: black;
+        }
+
+        .dropdown button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .fullWidth {
+            width: 100%;
+            padding-top: 9px;
+            padding-bottom: 9px;
+        }
+
+        .current-doing span {
+            padding-top: 7.5px;
+            padding-bottom: 7.5px;
+            font-weight: bold;
+        }
+
+        .history h2 {
+            text-align: center;
+        }
+
+        #historyList table {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Doing</h1>
+            <div class="menu">
+                <div class="hamburger" onclick="toggleMenu()">☰</div>
+                <div class="dropdown" id="menuDropdown">
+                    <button onclick="exportData()">Export</button>
+                    <button onclick="importFileInput.click()">Import</button>
+                    <input type="file" id="importFileInput" accept=".json" />
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="current-doing" id="currentDoing">
+            <span>Select an item below to begin Doing</span>
+            <button onclick="pauseDoing()">⏸</button>
+            <button onclick="markDone()">☑</button>
+        </div>
+
+        <div class="new-task" id="newTaskContainer">
+            <input type="text" id="newTaskInput" placeholder="New task..." />
+            <button onclick="addNewTask()">+ New Task</button>
+        </div>
+
+        <div id="todoList"></div>
+
+        <div class="history">
+            <h2>Session Log</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "doingListData";
+
+        let todoItems = [
+            "Write project proposal",
+            "Review team feedback",
+            "Fix login bug",
+            "Email client update"
+        ];
+
+        let currentTask = null;
+        let startTime = null;
+        let taskDurations = {}; // Task name => total seconds
+        let history = []; // { task: string, duration: seconds }
+
+        const todoList = document.getElementById("todoList");
+        const currentDoing = document.getElementById("currentDoing");
+        let newTaskInput = document.getElementById("newTaskInput");
+        const historyList = document.getElementById("historyList");
+        const importFileInput = document.getElementById("importFileInput");
+
+        importFileInput.addEventListener("change", importData);
+
+        function createItemDiv(item) {
+            const div = document.createElement("div");
+            div.itemData = item;
+            div.className = "todo-item";
+
+            const span = document.createElement("span");
+            span.textContent = item;
+
+            const button = document.createElement("button");
+            div.startButton = button;
+            button.textContent = "Start";
+            button.onclick = () => {
+                if (currentTask) {
+                    const elapsed = updateDuration();
+                    if (elapsed >= 0) {
+                        history.push({ task: currentTask, duration: elapsed });
+                        renderHistory();
+                    }
+                }
+                currentTask = item;
+                startTime = Date.now();
+                updateCurrentDoing();
+                saveData();
+                selectItem(div.dataset.index);
+            };
+
+            div.appendChild(span);
+            div.appendChild(button);
+
+            div.dataset.selected = "false";
+
+            return div;
+        }
+
+        let itemDivs = [];
+
+        function selectItem(index) {
+            const div = itemDivs[index];
+
+            div.startButton.remove();
+
+            const pauseButton = document.createElement("button");
+            pauseButton.onclick = pauseDoing;
+            pauseButton.textContent = "⏸";
+
+            const doneButton = document.createElement("button");
+            doneButton.onclick = markDone;
+            doneButton.textContent = "☑";
+
+            div.appendChild(pauseButton);
+            div.appendChild(doneButton);
+
+            div.style.backgroundColor = "#333333";
+            div.style.color = "white";
+
+            div.dataset.selected = "true";
+
+            itemDivs.forEach((div2) => {
+                if (div2 !== div && "true" == div2.dataset.selected) {
+                    deselectItem(div2.dataset.index);
+                }
+            })
+        }
+
+        function deselectItem(index) {
+            const deselectedDiv = createItemDiv(itemDivs[index].itemData);
+            deselectedDiv.dataset.index = index;
+            itemDivs[index].replaceWith(deselectedDiv);
+            itemDivs[index] = deselectedDiv;
+        }
+
+        function renderTodoList() {
+            todoList.innerHTML = "";
+            itemDivs = [];
+            todoItems.forEach((item) => {
+                const div = createItemDiv(item);
+                div.dataset.index = itemDivs.length;
+                itemDivs.push(div);
+                todoList.prepend(div);
+            });
+        }
+
+        function updateCurrentDoing() {
+            const span = currentDoing.querySelector("span");
+            if (currentTask) {
+                Array.from(currentDoing.children).map((x) => { if ("BUTTON" == x.tagName) { x.style.display = ""; } });
+                if ("true" === currentDoing.dataset.showDuration) {
+                    const elapsed = (taskDurations[currentTask] || 0) + Math.floor((Date.now() - startTime) / 1000);
+                    span.textContent = `${currentTask} (Total: ${formatDuration(elapsed)})`;
+                } else {
+                    span.textContent = `${currentTask}`;
+                }
+            } else {
+                span.textContent = "Select an item below to begin Doing";
+                Array.from(currentDoing.children).map((x) => { if ("BUTTON" == x.tagName) { x.style.display = "none"; } });
+            }
+        }
+
+        // Show duration on hover or click
+        currentDoing.addEventListener("mouseenter", () => {
+            currentDoing.dataset.showDuration = "true";
+            updateCurrentDoing();
+        });
+        currentDoing.addEventListener("mouseleave", () => {
+            currentDoing.dataset.showDuration = "false";
+            updateCurrentDoing();
+        });
+        currentDoing.addEventListener("click", () => {
+            currentDoing.dataset.showDuration = currentDoing.dataset.showDuration === "true" ? "false" : "true";
+            updateCurrentDoing();
+        });
+
+        function pauseDoing() {
+            const elapsed = updateDuration();
+            if (elapsed >= 0) {
+                history.push({ task: currentTask, duration: elapsed });
+                renderHistory();
+            }
+            currentTask = null;
+            startTime = null;
+            updateCurrentDoing();
+            renderTodoList();
+            saveData();
+        }
+
+        function markDone() {
+            if (currentTask) {
+                const elapsed = updateDuration();
+                if (elapsed > 0) {
+                    history.push({ task: currentTask, duration: elapsed });
+                    renderHistory();
+                }
+
+                const index = todoItems.indexOf(currentTask);
+                if (index !== -1) todoItems.splice(index, 1);
+
+                currentTask = null;
+                startTime = null;
+                updateCurrentDoing();
+                renderTodoList();
+                saveData();
+            }
+        }
+
+        function updateDuration() {
+            if (currentTask && startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                taskDurations[currentTask] = (taskDurations[currentTask] || 0) + elapsed;
+                startTime = Date.now();
+                saveData();
+                return elapsed;
+            }
+            return 0;
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = "";
+            const historyTable = document.createElement("table");
+            historyList.append(historyTable);
+            history.forEach(entry => {
+                const tr = document.createElement("tr");
+                tr.className = "history-entry";
+                const td0 = document.createElement("td");
+                td0.textContent = entry.task;
+                const td1 = document.createElement("td");
+                td1.style.textAlign = "right";
+                td1.textContent = formatDuration(entry.duration);
+                tr.append(td0);
+                tr.append(td1);
+                historyTable.prepend(tr);
+            });
+        }
+
+        function addNewTask() {
+            const newTask = newTaskInput.value.trim();
+            if (newTask) {
+                todoItems.push(newTask);
+                newTaskInput.value = "";
+                renderTodoList();
+                saveData();
+                setNotAddingTask();
+            }
+        }
+
+        function setAddingTask() {
+            document.getElementById("newTaskContainer").innerHTML = `
+            <input type="text" id="newTaskInput" placeholder="New task..." />
+            <button onclick="addNewTask()">+ New Task</button>
+        `;
+            newTaskInput = document.getElementById('newTaskInput');
+            document.getElementById('newTaskInput').addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevents form submission, if needed.
+                    addNewTask();
+                }
+            });
+            newTaskInput.addEventListener('blur', function () {
+                if ("" === newTaskInput.value) {
+                    setNotAddingTask();
+                }
+            });
+            document.getElementById("newTaskInput").focus();
+        }
+        window.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && document.activeElement === newTaskInput && "" === newTaskInput.value) {
+                setNotAddingTask();
+            }
+        });
+
+        function setNotAddingTask() {
+            document.getElementById("newTaskContainer").innerHTML = `
+            <button onclick="setAddingTask()" class="fullWidth">+ New Task</button>
+        `;
+        }
+
+        setNotAddingTask();
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600)
+            const mins = Math.floor(seconds % 3600 / 60);
+            const secs = seconds % 60;
+            if (hours) {
+                return `${hours}h ${mins}m ${secs}s`;
+            } else if (mins) {
+                return `${mins}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+
+        function saveData() {
+            const data = {
+                todoItems,
+                currentTask,
+                startTime,
+                taskDurations,
+                history,
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadData() {
+            const dataStr = localStorage.getItem(STORAGE_KEY);
+            if (dataStr) {
+                try {
+                    const data = JSON.parse(dataStr);
+                    todoItems = data.todoItems || [];
+                    currentTask = data.currentTask || null;
+                    startTime = data.startTime || null;
+                    taskDurations = data.taskDurations || {};
+                    history = data.history || [];
+                    if (startTime) startTime = Number(startTime);
+                } catch {
+                    setDefaultData();
+                }
+            } else {
+                setDefaultData();
+            }
+            renderTodoList();
+            renderHistory();
+            updateCurrentDoing();
+        }
+
+        function setDefaultData() {
+            todoItems = [
+                "Write project proposal",
+                "Review team feedback",
+                "Fix login bug",
+                "Email client update"
+            ];
+            currentTask = null;
+            startTime = null;
+            taskDurations = {};
+            history = [];
+        }
+
+        function exportData() {
+            const data = {
+                todoItems,
+                history,
+                taskDurations,
+                currentTask,
+                startTime,
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "doing-list-data.json";
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    todoItems = data.todoItems || [];
+                    history = data.history || [];
+                    taskDurations = data.taskDurations || {};
+                    currentTask = data.currentTask || null;
+                    startTime = data.startTime || null;
+                    if (startTime) startTime = Number(startTime);
+
+                    renderTodoList();
+                    renderHistory();
+                    updateCurrentDoing();
+                    saveData();
+                } catch (err) {
+                    alert("Failed to import data: invalid file.");
+                }
+            };
+            reader.readAsText(file);
+
+            // Clear input so same file can be re-imported if needed
+            importFileInput.value = "";
+        }
+
+        function toggleMenu() {
+            const dropdown = document.getElementById("menuDropdown");
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        }
+
+        document.addEventListener("click", function (e) {
+            const menu = document.querySelector(".menu");
+            const dropdown = document.getElementById("menuDropdown");
+            if (!menu.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+
+
+
+
+
+
+        // Update displayed duration every second if visible
+        setInterval(() => {
+            if (currentTask && startTime) {
+                const show = currentDoing.dataset.showDuration === "true";
+                const span = currentDoing.querySelector("span");
+                if (show) {
+                    const elapsed = (taskDurations[currentTask] || 0) + Math.floor((Date.now() - startTime) / 1000);
+                    span.textContent = `${currentTask} (Total: ${formatDuration(elapsed)})`;
+                } else {
+                    span.textContent = `${currentTask}`;
+                }
+            }
+        }, 1000);
+
+        loadData();
+    </script>
+</body>
+
+</html>
