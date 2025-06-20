@@ -184,7 +184,7 @@
         + (undefined !== project.demo ? `
           <p><a href="${project.demo}" target="_blank">Live Demo</a></p>` : "");
       project.links?.forEach(link => div.innerHTML += `
-          <p><a href="${link.url}>${link.text}</a></p>`);
+          <p><a href="${link.url}">${link.text}</a></p>`);
       div.innerHTML += `
         </div>
       `;
