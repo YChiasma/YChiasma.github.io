@@ -118,13 +118,20 @@
         description: "Chat with other users of any website (Browser Add-on)",
         language: "JavaScript",
         repo: "https://github.com/YChiasma/Browse_Buddy",
-        image: "https://raw.githubusercontent.com/YChiasma/Browse_Buddy/refs/heads/main/Screenshot.png"
+        image: "https://raw.githubusercontent.com/YChiasma/Browse_Buddy/refs/heads/main/Screenshot.png",
+        links: [
+          {
+            text: "Add-on Page",
+            url: "https://addons.mozilla.org/en-US/firefox/addon/browse-buddy/"
+          }
+        ]
       },
       {
         name: "Game of Life",
         description: "Game of Life",
         language: "JavaScript",
         repo: "https://github.com/YChiasma/Projects/tree/main/Game%20of%20Life",
+        demo: "https://ychiasma.github.io/gameoflife",
         image: "https://raw.githubusercontent.com/YChiasma/Projects/refs/heads/main/Game%20of%20Life/Screenshot.png"
       },
       {
@@ -132,7 +139,13 @@
         description: "A node package that adds a combobox (autocomplete form element) including backend.",
         language: "JavaScript",
         repo: "https://github.com/YChiasma/yx-combobox",
-        image: "https://raw.githubusercontent.com/YChiasma/yx-combobox/refs/heads/main/Screenshot.png"
+        image: "https://raw.githubusercontent.com/YChiasma/yx-combobox/refs/heads/main/Screenshot.png",
+        links: [
+          {
+            text: "NPM Package",
+            url: "https://www.npmjs.com/package/yx-combobox"
+          }
+        ]
       },
       {
         name: "OCR_Search",
@@ -146,7 +159,13 @@
         description: 'A Greasemonkey script that adds "Show Word Bank" to Duolingo to make copy and pasting easier.',
         language: "JavaScript",
         repo: "https://github.com/YChiasma/Duolingo_Wordbank",
-        image: "https://raw.githubusercontent.com/YChiasma/Duolingo_Wordbank/refs/heads/main/Screenshot.png"
+        image: "https://raw.githubusercontent.com/YChiasma/Duolingo_Wordbank/refs/heads/main/Screenshot.png",
+        links: [
+          {
+            text: "View on Greasyfork",
+            url: "https://greasyfork.org/en/scripts/532487-duolingo-wordbank-toggle"
+          }
+        ]
       }
     ];
 
@@ -161,7 +180,12 @@
           <h2>${project.name}</h2>
           <p>${project.description}</p>
           <p><strong>Language:</strong> ${project.language}</p>
-          <p><a href="${project.repo}" target="_blank">View on GitHub</a></p>
+          <p><a href="${project.repo}" target="_blank">View on GitHub</a></p>`
+        + (undefined !== project.demo ? `
+          <p><a href="${project.demo}" target="_blank">Live Demo</a></p>` : "";
+      project.links?.forEach(link => div.innerHTML += `
+          <p><a href="${link.url}>${link.text}</a></p>`);
+      div.innerHTML += `
         </div>
       `;
       container.appendChild(div);
@@ -169,4 +193,3 @@
   </script>
 </body>
 </html>
-s
