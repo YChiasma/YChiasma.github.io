@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Tint & Text Tool</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #canvasContainer { position: relative; display: inline-block; margin-top: 20px; max-width: 100%; overflow-x: auto; }
+    canvas { border: 1px solid #ccc; max-width: 100%; height: auto; }
+    textarea { width: 300px; height: 100px; margin: 10px 0; }
+    .slider-container { margin: 10px 0; display: flex; flex-direction: column; align-items: center; }
+    input[type=range] { width: 320px; }
+  </style>
+</head>
+<body>
+  <h2>Image Tint & Text Tool</h2>
+  <input type="file" id="bgInput" accept="image/*" />
+  <br />
+  <label for="tintColor">Tint Color:</label>
+  <select id="tintColor">
+    <option value="black">Black</option>
+    <option value="white">White</option>
+  </select>
+  <br />
+  <label for="tintOpacity">Tint Opacity: <span id="tintOpacityLabel">0.5</span></label>
+  <input type="range" id="tintOpacity" min="0" max="1" step="0.01" value="0.5" />
+  <br />
+  <textarea id="overlayText" placeholder="Enter overlay text (you can use multiple lines)"></textarea>
+  <div class="slider-container">
+    <label for="fontSize">Font Size: <span id="fontSizeLabel">40</span>px</label>
+    <input type="range" id="fontSize" min="10" max="100" step="0.5" value="40" />
+  </div>
+  <label for="columns">Text Columns:</label>
+  <select id="columns">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+  </select>
+  <br />
+  <label for="textAlign">Text Alignment:</label>
+  <select id="textAlign">
+    <option value="center">Center</option>
+    <option value="left">Left</option>
+    <option value="right">Right</option>
+  </select>
+  <br />
+  <input type="text" id="watermark" value="ychiasma.github.io/tinter" placeholder="Watermark text (optional)" />
+  <br />
+  <button onclick="renderImage()">Apply</button>
+  <button onclick="downloadImage()">Download</button>
+  <br />
+
+  <div id="canvasContainer">
+    <canvas id="canvas" width="800" height="600"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const fontSizeSlider = document.getElementById("fontSize");
+    const fontSizeLabel = document.getElementById("fontSizeLabel");
+    const columnsSelect = document.getElementById("columns");
+    const tintOpacitySlider = document.getElementById("tintOpacity");
+    const tintOpacityLabel = document.getElementById("tintOpacityLabel");
+    let uploadedImage = null;
+
+    const marginScale = 0.20;
+    const scale = 1.00-marginScale;
+
+    fontSizeSlider.addEventListener("input", () => {
+      fontSizeLabel.textContent = fontSizeSlider.value;
+      renderImage();
+    });
+
+    tintOpacitySlider.addEventListener("input", () => {
+      tintOpacityLabel.textContent = tintOpacitySlider.value;
+      renderImage();
+    });
+
+    document.getElementById("bgInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          uploadedImage = img;
+          renderImage();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight, columns, align) {
+      const paragraphs = text.split("\n");
+      const lines = [];
+
+      
+      const columnWidth = (maxWidth / columns);
+      const columnContentWidth = columnWidth * scale;
+
+      paragraphs.forEach(paragraph => {
+        const words = paragraph.split(' ');
+        let line = '';
+
+        words.forEach(word => {
+          const testLine = line + word + ' ';
+          const testWidth = context.measureText(testLine).width;
+
+          if (testWidth > columnContentWidth && line !== '') {
+            lines.push(line);
+            line = word + ' ';
+          } else {
+            line = testLine;
+          }
+        });
+
+        lines.push(line.trim());
+      });
+
+      const linesPerColumn = Math.ceil(lines.length / columns);
+      const totalTextHeight = linesPerColumn * lineHeight;
+      const startY = y - totalTextHeight / 2 + lineHeight / 2;
+      const startX = x - maxWidth / 2;
+
+      const margin = maxWidth * marginScale / (columns+1);
+
+      for (let col = 0; col < columns; col++) {
+        let colX;
+        if (align === 'left') colX = startX + col * columnWidth * scale + (col+1) * margin;
+        else if (align === 'right') colX = startX + (col + 1) * columnWidth * scale + (col+1) * margin;
+        else colX = startX + col * columnWidth * scale + columnWidth / 2 * scale + (col+1) * margin;
+
+        context.textAlign = align;
+        for (let i = 0; i < linesPerColumn; i++) {
+          const index = col * linesPerColumn + i;
+          if (index >= lines.length) break;
+          context.fillText(lines[index], colX, startY + i * lineHeight);
+        }
+      }
+    }
+
+    function renderImage() {
+      if (!uploadedImage) return;
+      const tintColor = document.getElementById("tintColor").value;
+      const tintOpacity = parseFloat(tintOpacitySlider.value);
+      const text = document.getElementById("overlayText").value;
+      const fontSize = parseFloat(fontSizeSlider.value);
+      const columns = parseInt(columnsSelect.value);
+      const watermark = document.getElementById("watermark").value;
+      const textAlign = document.getElementById("textAlign").value;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = tintColor === 'black'
+        ? `rgba(0,0,0,${tintOpacity})`
+        : `rgba(255,255,255,${tintOpacity})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (text) {
+        ctx.fillStyle = tintColor === 'white' ? "black" : "white";
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.textBaseline = "middle";
+        const maxWidth = canvas.width;
+        const lineHeight = fontSize * 1.2;
+        wrapText(ctx, text, canvas.width / 2, canvas.height / 2, maxWidth, lineHeight, columns, textAlign);
+      }
+
+      if (watermark) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.font = "16px sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(watermark, canvas.width - 10, canvas.height - 10);
+      }
+    }
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'tinted_image.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
