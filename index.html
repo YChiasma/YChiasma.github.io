@@ -182,7 +182,7 @@
           <p><strong>Language:</strong> ${project.language}</p>
           <p><a href="${project.repo}" target="_blank">View on GitHub</a></p>`
         + (undefined !== project.demo ? `
-          <p><a href="${project.demo}" target="_blank">Live Demo</a></p>` : "";
+          <p><a href="${project.demo}" target="_blank">Live Demo</a></p>` : "");
       project.links?.forEach(link => div.innerHTML += `
           <p><a href="${link.url}>${link.text}</a></p>`);
       div.innerHTML += `
