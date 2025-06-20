@@ -142,7 +142,7 @@
         image: "https://raw.githubusercontent.com/YChiasma/yx-combobox/refs/heads/main/Screenshot.png",
         links: [
           {
-            text: "NPM Package",
+            text: "View NPM Package",
             url: "https://www.npmjs.com/package/yx-combobox"
           }
         ]
@@ -174,7 +174,7 @@
     projects.forEach(project => {
       const div = document.createElement('div');
       div.className = 'project';
-      div.innerHTML = `
+      let innerHTML = `
         <img src="${project.image}" alt="${project.name} screenshot" />
         <div class="project-content">
           <h2>${project.name}</h2>
@@ -183,11 +183,12 @@
           <p><a href="${project.repo}" target="_blank">View on GitHub</a></p>`
         + (undefined !== project.demo ? `
           <p><a href="${project.demo}" target="_blank">Live Demo</a></p>` : "");
-      project.links?.forEach(link => div.innerHTML += `
-          <p><a href="${link.url}">${link.text}</a></p>`);
-      div.innerHTML += `
+      project.links?.forEach(link => innerHTML += `
+          <p><a href="${link.url}" target="_blank">${link.text}</a></p>`);
+      innerHTML += `
         </div>
       `;
+      div.innerHTML = innerHTML;
       container.appendChild(div);
     });
   </script>
