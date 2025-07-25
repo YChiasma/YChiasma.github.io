@@ -261,6 +261,32 @@
             "Email client update"
         ];
 
+        let todoObjects = [];
+        let nextTodoObjectId = 0;
+
+        function clearTodo() {
+            todoObjects = [];
+            nextTodoObjectId = 0;
+        }
+
+        function addTodoObject(content) {
+            const todoObject = {
+                    id: nextTodoObjectId++,
+                    content: item,
+                    selected: false,
+            };
+            todoObjects.push(todoObject);
+            return todoObject;
+        }
+
+        function initializeTodo(items) {
+            items.forEach((item) => {
+                addTodoObject(item);
+            });
+        }
+
+        // initializeTodo(todoItems);
+
         let currentTask = null;
         let startTime = null;
         let taskDurations = {}; // Task name => total seconds
@@ -310,8 +336,14 @@
 
         let itemDivs = [];
 
+        let selectedIndex = -1;
+
         function selectItem(index) {
+            if(-1 == index) return;
+
             const div = itemDivs[index];
+
+            if("true" == div.dataset.selected) return;
 
             div.startButton.remove();
 
@@ -335,10 +367,17 @@
                 if (div2 !== div && "true" == div2.dataset.selected) {
                     deselectItem(div2.dataset.index);
                 }
-            })
+            });
+
+            selectedIndex = index;
+            saveData();
         }
 
         function deselectItem(index) {
+            if(index == selectedIndex) {
+                selectedIndex = -1;
+                saveData();
+            }
             const deselectedDiv = createItemDiv(itemDivs[index].itemData);
             deselectedDiv.dataset.index = index;
             itemDivs[index].replaceWith(deselectedDiv);
@@ -354,6 +393,7 @@
                 itemDivs.push(div);
                 todoList.prepend(div);
             });
+            selectItem(selectedIndex);
         }
 
         function updateCurrentDoing() {
@@ -396,13 +436,14 @@
             startTime = null;
             updateCurrentDoing();
             renderTodoList();
+            deselectItem(selectedIndex);
             saveData();
         }
 
         function markDone() {
             if (currentTask) {
                 const elapsed = updateDuration();
-                if (elapsed > 0) {
+                if (elapsed >= 0) {
                     history.push({ task: currentTask, duration: elapsed });
                     renderHistory();
                 }
@@ -414,6 +455,7 @@
                 startTime = null;
                 updateCurrentDoing();
                 renderTodoList();
+                deselectItem(selectedIndex);
                 saveData();
             }
         }
@@ -511,6 +553,7 @@
                 startTime,
                 taskDurations,
                 history,
+                selectedIndex,
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
@@ -525,6 +568,8 @@
                     startTime = data.startTime || null;
                     taskDurations = data.taskDurations || {};
                     history = data.history || [];
+                    selectedIndex = Number(data.selectedIndex) || -1;
+                    if(selectedIndex != -1) setTimeout(() => selectItem(selectedIndex), 0);
                     if (startTime) startTime = Number(startTime);
                 } catch {
                     setDefaultData();
@@ -544,6 +589,7 @@
                 "Fix login bug",
                 "Email client update"
             ];
+            initializeTodo(todoItems);
             currentTask = null;
             startTime = null;
             taskDurations = {};
