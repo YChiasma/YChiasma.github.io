@@ -451,6 +451,8 @@
                 const index = todoItems.indexOf(currentTask);
                 if (index !== -1) todoItems.splice(index, 1);
 
+                if (index !== -1) todoObjects.splice(index, 1);
+
                 currentTask = null;
                 startTime = null;
                 updateCurrentDoing();
@@ -493,6 +495,7 @@
             const newTask = newTaskInput.value.trim();
             if (newTask) {
                 todoItems.push(newTask);
+                addTodoObject(newTask);
                 newTaskInput.value = "";
                 renderTodoList();
                 saveData();
@@ -577,6 +580,7 @@
             } else {
                 setDefaultData();
             }
+            initializeTodo(todoItems);
             renderTodoList();
             renderHistory();
             updateCurrentDoing();
@@ -631,6 +635,7 @@
                     startTime = data.startTime || null;
                     if (startTime) startTime = Number(startTime);
 
+                    initializeTodo(todoItems);
                     renderTodoList();
                     renderHistory();
                     updateCurrentDoing();
