@@ -395,6 +395,10 @@
                 itemDivs.push(div);
                 todoList.prepend(div);
             });
+            let objDivIndex = 0;
+            todoObjets.forEach((obj) => {
+              obj.divIndex = objDivIndex++;
+            });
             selectItem(selectedIndex);
         }
 
