@@ -398,6 +398,9 @@
             let objDivIndex = 0;
             todoObjets.forEach((obj) => {
               obj.divIndex = objDivIndex++;
+              if(obj.divIndex == selectedIndex) {
+                obj.selected = true;
+              }
             });
             selectItem(selectedIndex);
         }
