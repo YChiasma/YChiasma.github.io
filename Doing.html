@@ -396,7 +396,7 @@
                 todoList.prepend(div);
             });
             let objDivIndex = 0;
-            todoObjets.forEach((obj) => {
+            todoObjects.forEach((obj) => {
               obj.divIndex = objDivIndex++;
               if(obj.divIndex == selectedIndex) {
                 obj.selected = true;
@@ -488,7 +488,7 @@
             historyList.innerHTML = "";
             const historyTable = document.createElement("table");
             historyList.append(historyTable);
-            history.forEach(entry => {
+            history.concat([{ task: currentTask, duration: updateDuration() }]).forEach(entry => {
                 const tr = document.createElement("tr");
                 tr.className = "history-entry";
                 const td0 = document.createElement("td");
@@ -500,6 +500,7 @@
                 tr.append(td1);
                 historyTable.prepend(tr);
             });
+            setTimeout(renderHistory, 1000);
         }
 
         function addNewTask() {
