@@ -484,11 +484,19 @@
             return 0;
         }
 
+        function getDuration() {
+            if (currentTask && startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                return elapsed;
+            }
+            return 0;
+        }
+
         function renderHistory() {
             historyList.innerHTML = "";
             const historyTable = document.createElement("table");
             historyList.append(historyTable);
-            history.concat([{ task: currentTask, duration: updateDuration() }]).forEach(entry => {
+            history.concat([{ task: currentTask, duration: getDuration() }]).forEach(entry => {
                 const tr = document.createElement("tr");
                 tr.className = "history-entry";
                 const td0 = document.createElement("td");
