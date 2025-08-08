@@ -302,7 +302,7 @@
 
         importFileInput.addEventListener("change", importData);
 
-        function createItemDiv(item) {
+        function createItemDiv(item, objectId=-1) {
             const div = document.createElement("div");
             div.itemData = item;
             div.className = "todo-item";
@@ -332,6 +332,10 @@
             div.appendChild(button);
 
             div.dataset.selected = "false";
+
+            if(objectId != -1) {
+                div.dataset.objectId = objectId;
+            }
 
             return div;
         }
@@ -496,7 +500,11 @@
             historyList.innerHTML = "";
             const historyTable = document.createElement("table");
             historyList.append(historyTable);
-            history.concat([{ task: currentTask, duration: getDuration() }]).forEach(entry => {
+            let concat = [];
+            if (currentTask && startTime) {
+                concat = [{ task: currentTask, duration: getDuration() }];
+            }
+            history.concat(concat).forEach(entry => {
                 const tr = document.createElement("tr");
                 tr.className = "history-entry";
                 const td0 = document.createElement("td");
