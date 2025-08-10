@@ -594,6 +594,13 @@
                 try {
                     const data = JSON.parse(dataStr);
                     todoItems = data.todoItems || [];
+                    if(data.todoObjects) {
+                        todoObjects = data.todoObjects;
+                    }
+                    else {
+                        initializeTodo(todoItems);
+                    } // TODO: add similar logic to importData()
+                    // TODO: combine common logic from import/export and load/save into a helper fn
                     currentTask = data.currentTask || null;
                     startTime = data.startTime || null;
                     taskDurations = data.taskDurations || {};
