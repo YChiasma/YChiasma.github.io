@@ -664,6 +664,12 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     todoItems = data.todoItems || [];
+                    if(data.todoObjects) {
+                        todoObjects = data.todoObjects;
+                    }
+                    else {
+                        initializeTodo(todoItems);
+                    }
                     history = data.history || [];
                     taskDurations = data.taskDurations || {};
                     currentTask = data.currentTask || null;
