@@ -575,6 +575,27 @@
             }
         }
 
+        // TODO: test this
+        // TODO: call this from saveData and importData
+        function setData(data) {
+            todoItems = data.todoItems || [];
+            if(data.todoObjects) {
+                todoObjects = data.todoObjects;
+            }
+            else {
+                initializeTodo(todoItems);
+            }
+            currentTask = data.currentTask || null;
+            startTime = data.startTime || null;
+            taskDurations = data.taskDurations || {};
+            history = data.history || [];
+            selectedIndex = Number(data.selectedIndex) || -1;
+            if(selectedIndex != -1) setTimeout(() => selectItem(selectedIndex), 0);
+            if (startTime) startTime = Number(startTime);
+        }
+
+        // TODO: function getData(data) {} // for use in loadData and exportData functions
+
         function saveData() {
             const data = {
                 todoItems,
@@ -599,7 +620,7 @@
                     }
                     else {
                         initializeTodo(todoItems);
-                    } // TODO: add similar logic to importData()
+                    }
                     // TODO: combine common logic from import/export and load/save into a helper fn
                     currentTask = data.currentTask || null;
                     startTime = data.startTime || null;
