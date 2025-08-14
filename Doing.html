@@ -615,23 +615,6 @@
                 try {
                     const data = JSON.parse(dataStr);
                     setData(data);
-                    /*
-                    todoItems = data.todoItems || [];
-                    if(data.todoObjects) {
-                        todoObjects = data.todoObjects;
-                    }
-                    else {
-                        initializeTodo(todoItems);
-                    }
-                    // TODO: combine common logic from import/export and load/save into a helper fn
-                    currentTask = data.currentTask || null;
-                    startTime = data.startTime || null;
-                    taskDurations = data.taskDurations || {};
-                    history = data.history || [];
-                    selectedIndex = Number(data.selectedIndex) || -1;
-                    if(selectedIndex != -1) setTimeout(() => selectItem(selectedIndex), 0);
-                    if (startTime) startTime = Number(startTime);
-                    */
                 } catch {
                     setDefaultData();
                 }
@@ -688,20 +671,6 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     setData(data);
-                    /*
-                    todoItems = data.todoItems || [];
-                    if(data.todoObjects) {
-                        todoObjects = data.todoObjects;
-                    }
-                    else {
-                        initializeTodo(todoItems);
-                    }
-                    history = data.history || [];
-                    taskDurations = data.taskDurations || {};
-                    currentTask = data.currentTask || null;
-                    startTime = data.startTime || null;
-                    if (startTime) startTime = Number(startTime);
-                    */
 
                     initializeTodo(todoItems);
                     renderTodoList();
