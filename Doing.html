@@ -594,7 +594,19 @@
             if (startTime) startTime = Number(startTime);
         }
 
-        // TODO: function getData(data) {} // for use in loadData and exportData functions
+        // TODO: function getData() {} // for use in loadData and exportData functions
+        function getData() {
+            const data = {
+                todoItems,
+                currentTask,
+                startTime,
+                taskDurations,
+                history,
+                selectedIndex,
+                todoObjects,
+            };
+            return data;
+        }
 
         function saveData() {
             const data = {
