@@ -594,7 +594,7 @@
             if (startTime) startTime = Number(startTime);
         }
 
-        // TODO: function getData() {} // for use in loadData and exportData functions
+        // TODO: function getData() {} // for use in saveData and exportData functions
         function getData() {
             const data = {
                 todoItems,
@@ -609,15 +609,7 @@
         }
 
         function saveData() {
-            const data = {
-                todoItems,
-                currentTask,
-                startTime,
-                taskDurations,
-                history,
-                selectedIndex,
-                todoObjects,
-            };
+            const data = getData();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
@@ -654,14 +646,7 @@
         }
 
         function exportData() {
-            const data = {
-                todoItems,
-                history,
-                taskDurations,
-                currentTask,
-                startTime,
-                todoObjects,
-            };
+            const data = getData();
             const json = JSON.stringify(data, null, 2);
             const blob = new Blob([json], { type: "application/json" });
             const url = URL.createObjectURL(blob);
