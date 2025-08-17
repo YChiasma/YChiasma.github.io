@@ -575,8 +575,6 @@
             }
         }
 
-        // TODO: test this
-        // TODO: call this from saveData and importData
         function setData(data) {
             todoItems = data.todoItems || [];
             if(data.todoObjects) {
@@ -594,7 +592,6 @@
             if (startTime) startTime = Number(startTime);
         }
 
-        // TODO: function getData() {} // for use in saveData and exportData functions
         function getData() {
             const data = {
                 todoItems,
