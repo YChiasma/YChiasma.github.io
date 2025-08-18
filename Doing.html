@@ -517,6 +517,12 @@
             setTimeout(renderHistory, 1000);
         }
 
+        function render() {
+            renderTodoList();
+            renderHistory();
+            updateCurrentDoing();
+        }
+
         function addNewTask() {
             const newTask = newTaskInput.value.trim();
             if (newTask) {
