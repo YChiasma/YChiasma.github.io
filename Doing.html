@@ -281,6 +281,10 @@
             return todoObject;
         }
 
+        function getTodoItems() {
+            return todoObjects.map(x => x.content);
+        }
+
         function initializeTodo(items) {
             items.forEach((item) => {
                 addTodoObject(item);
