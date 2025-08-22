@@ -438,10 +438,14 @@
             currentDoing.dataset.showDuration = "false";
             updateCurrentDoing();
         });
-        currentDoing.addEventListener("click", () => {
-            currentDoing.dataset.showDuration = currentDoing.dataset.showDuration === "true" ? "false" : "true";
+        currentDoing.addEventListener("mousedown", () => {
+            currentDoing.dataset.showDuration = "true";
             updateCurrentDoing();
-        }); // TODO: Change to mousedown and mouseup ?
+        });
+        currentDoing.addEventListener("mouseup", () => {
+            currentDoing.dataset.showDuration = "false";
+            updateCurrentDoing();
+        });
 
         function pauseDoing() {
             const elapsed = updateDuration();
