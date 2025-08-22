@@ -441,7 +441,7 @@
         currentDoing.addEventListener("click", () => {
             currentDoing.dataset.showDuration = currentDoing.dataset.showDuration === "true" ? "false" : "true";
             updateCurrentDoing();
-        });
+        }); // TODO: Change to mousedown and mouseup ?
 
         function pauseDoing() {
             const elapsed = updateDuration();
