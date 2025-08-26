@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom Matrix Rain</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      color: #0F0;
+      font-family: monospace;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    textarea {
+      width: 300px;
+      height: 100px;
+    }
+    button {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label for="textInput">Paste your text here:</label><br/>
+    <textarea id="textInput" placeholder="Type or paste text..."></textarea><br/>
+    <button id="startBtn">Start Matrix Rain</button>
+  </div>
+  <canvas id="matrix"></canvas>
+
+  <script>
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let letters = '01';
+    let fontSize = 16;
+    let columns = canvas.width / fontSize;
+    let drops = Array(Math.floor(columns)).fill(1);
+
+    function updateLetters() {
+      const input = document.getElementById('textInput').value;
+      letters = input.length > 0 ? input : '01';
+    }
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0F0';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i]++;
+      }
+    }
+
+    let interval;
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      updateLetters();
+      if (interval) clearInterval(interval);
+      interval = setInterval(draw, 33);
+    });
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      columns = canvas.width / fontSize;
+      drops = Array(Math.floor(columns)).fill(1);
+    });
+  </script>
+</body>
+</html>
