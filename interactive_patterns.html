@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Geometric Patterns</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --accent: rgba(255,255,255,0.08);
+      color-scheme: dark;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    #wrap{display:grid;grid-template-columns:1fr 320px;height:100vh;}
+    canvas{width:100%;height:100%;display:block}
+    .panel{background:var(--panel);backdrop-filter:blur(6px);padding:18px;color:#e6eef8;box-shadow:0 4px 24px rgba(2,6,23,0.6);overflow:auto}
+    h1{font-size:16px;margin:0 0 12px 0}
+    label{display:block;font-size:12px;margin-top:10px;color:#cfe0ff}
+    .row{display:flex;gap:8px;align-items:center}
+    input[type=range]{width:100%}
+    select,input[type=color]{width:100%;height:34px;border-radius:6px;border:none;padding:6px;background:var(--accent);color:#e6eef8}
+    button{margin-top:12px;width:100%;height:40px;border-radius:8px;border:0;background:#61dafb;color:#072029;font-weight:600;cursor:pointer}
+    small{color:#9fb3d9}
+    .footer{font-size:12px;margin-top:14px;opacity:.8}
+    .credits{font-size:11px;color:#92b0d8;margin-top:20px}
+    .control-row{display:flex;gap:8px}
+    .control-row > *{flex:1}
+    .toggle{display:inline-flex;align-items:center;gap:8px}
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <main id="stage">
+      <canvas id="c"></canvas>
+    </main>
+    <aside class="panel">
+      <h1>Interactive Geometric Patterns</h1>
+      <div class="desc"><small>Move the mouse (or touch) to change patterns in real-time. Adjust controls to explore variations.</small></div>
+
+      <label>Pattern type
+        <select id="pattern">
+          <option value="radial">Radial repeats</option>
+          <option value="grid">Grid of shapes</option>
+          <option value="voronoi">Voronoi-ish blobs</option>
+          <option value="flow">Flow lines</option>
+        </select>
+      </label>
+
+      <label>Shapes
+        <select id="shape">
+          <option value="circle">Circles</option>
+          <option value="triangle">Triangles</option>
+          <option value="square">Squares</option>
+          <option value="hex">Hexagons</option>
+        </select>
+      </label>
+
+      <label>Symmetry / copies <small>(mouse X controls rotation & mouse Y controls scale)</small>
+        <input id="copies" type="range" min="1" max="64" value="12">
+      </label>
+
+      <label>Density
+        <input id="density" type="range" min="0.1" max="4" step="0.1" value="1">
+      </label>
+
+      <label>Color palette
+        <select id="palette">
+          <option value="neon">Neon</option>
+          <option value="pastel">Pastel</option>
+          <option value="mono">Monochrome</option>
+          <option value="fire">Fire</option>
+          <option value="ocean">Ocean</option>
+        </select>
+      </label>
+
+      <label>Blend mode
+        <select id="blend">
+          <option value="lighter">Additive (lighter)</option>
+          <option value="source-over">Normal</option>
+          <option value="multiply">Multiply</option>
+          <option value="screen">Screen</option>
+        </select>
+      </label>
+
+      <label>Size wobble
+        <input id="wobble" type="range" min="0" max="1" step="0.01" value="0.25">
+      </label>
+
+      <div class="control-row">
+        <label>Speed
+          <input id="speed" type="range" min="0" max="2" step="0.01" value="0.9">
+        </label>
+        <label>Seed
+          <input id="seed" type="number" min="0" max="99999" value="42">
+        </label>
+      </div>
+
+      <label class="toggle"><input id="motionBlur" type="checkbox"> Motion blur</label>
+      <label class="toggle"><input id="autoRotate" type="checkbox" checked> Auto rotate</label>
+
+      <button id="randomize">Randomize</button>
+      <button id="save">Save PNG</button>
+
+      <div class="credits">Tip: move fast to get streaks; move slowly to draw with single shapes.</div>
+    </aside>
+  </div>
+
+  <script>
+    // Helper utilities
+    const qs = s => document.querySelector(s);
+    const c = qs('#c');
+    const ctx = c.getContext('2d');
+
+    // High-DPI canvas sizing
+    function resize(){
+      const dpr = window.devicePixelRatio || 1;
+      c.width = Math.floor(c.clientWidth * dpr);
+      c.height = Math.floor(c.clientHeight * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener('resize', resize);
+
+    // Parameters
+    const state = {
+      mx: 0.5, my: 0.5,
+      px: 0.5, py: 0.5,
+      lastMove: Date.now(),
+      copies: 12,
+      density: 1,
+      pattern: 'radial',
+      shape: 'circle',
+      palette: 'neon',
+      blend: 'lighter',
+      wobble: 0.25,
+      speed: 0.9,
+      seed: 42,
+      motionBlur: true,
+      autoRotate: true,
+      t: 0
+    };
+
+    // Simple seeded RNG
+    function rngFactory(s){
+      let x = s % 2147483647;
+      if (x <= 0) x += 2147483646;
+      return () => (x = x * 16807 % 2147483647) / 2147483647;
+    }
+
+    // Palettes
+    const palettes = {
+      neon: ['#16a085','#f39c12','#e74c3c','#8e44ad','#3498db','#f1c40f'],
+      pastel: ['#ffd1dc','#bde0fe','#c7f9cc','#fff7bd','#fbe7c6','#d3c0f9'],
+      mono: ['#ffffff','#d0d7e0','#9aa7bf','#6b7a90','#33404f'],
+      fire: ['#ffbe0b','#fb5607','#ff006e','#8338ec','#3a86ff'],
+      ocean: ['#023e8a','#0077b6','#00b4d8','#90e0ef','#ade8f4']
+    };
+
+    // DOM bindings
+    function bindControls(){
+      qs('#copies').addEventListener('input', e=> state.copies = +e.target.value);
+      qs('#density').addEventListener('input', e=> state.density = +e.target.value);
+      qs('#pattern').addEventListener('change', e=> state.pattern = e.target.value);
+      qs('#shape').addEventListener('change', e=> state.shape = e.target.value);
+      qs('#palette').addEventListener('change', e=> state.palette = e.target.value);
+      qs('#blend').addEventListener('change', e=> ctx.globalCompositeOperation = state.blend = e.target.value);
+      qs('#wobble').addEventListener('input', e=> state.wobble = +e.target.value);
+      qs('#speed').addEventListener('input', e=> state.speed = +e.target.value);
+      qs('#seed').addEventListener('input', e=> {state.seed = Math.max(0, Math.floor(e.target.value)); initRng();});
+      qs('#motionBlur').addEventListener('change', e=> state.motionBlur = e.target.checked);
+      qs('#autoRotate').addEventListener('change', e=> state.autoRotate = e.target.checked);
+      qs('#randomize').addEventListener('click', randomize);
+      qs('#save').addEventListener('click', savePNG);
+      // init blending
+      ctx.globalCompositeOperation = state.blend;
+    }
+
+    function randomize(){
+      const r = Math.floor(Math.random()*99999);
+      qs('#seed').value = r; state.seed = r; initRng();
+      qs('#copies').value = state.copies = Math.floor(3 + Math.random()*48);
+      qs('#density').value = state.density = (0.2 + Math.random()*3.8).toFixed(2);
+      const pkeys = Object.keys(palettes);
+      state.palette = pkeys[Math.floor(Math.random()*pkeys.length)]; qs('#palette').value = state.palette;
+      const shapes = ['circle','triangle','square','hex']; state.shape = shapes[Math.floor(Math.random()*shapes.length)]; qs('#shape').value = state.shape;
+      const patterns = ['radial','grid','voronoi','flow']; state.pattern = patterns[Math.floor(Math.random()*patterns.length)]; qs('#pattern').value = state.pattern;
+    }
+
+    function savePNG(){
+      const link = document.createElement('a');
+      link.download = 'pattern.png';
+      link.href = c.toDataURL('image/png');
+      link.click();
+    }
+
+    // Input handling
+    function handlePointer(e){
+      const rect = c.getBoundingClientRect();
+      const x = (e.clientX ?? e.touches?.[0]?.clientX ?? (rect.left + rect.width/2)) - rect.left;
+      const y = (e.clientY ?? e.touches?.[0]?.clientY ?? (rect.top + rect.height/2)) - rect.top;
+      state.mx = x / rect.width; state.my = y / rect.height;
+      state.lastMove = Date.now();
+    }
+    window.addEventListener('pointermove', handlePointer);
+    window.addEventListener('touchmove', e=>{ handlePointer(e); e.preventDefault(); }, {passive:false});
+
+    // Drawing primitives
+    function drawShape(x,y,size,rot,fill){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      if(fill) ctx.fillStyle = fill;
+      const s = size;
+      switch(state.shape){
+        case 'circle':
+          ctx.beginPath(); ctx.arc(0,0,s/2,0,Math.PI*2); ctx.closePath(); ctx.fill(); break;
+        case 'triangle':
+          ctx.beginPath(); ctx.moveTo(0,-s/2); ctx.lineTo(s/2,s/2); ctx.lineTo(-s/2,s/2); ctx.closePath(); ctx.fill(); break;
+        case 'square':
+          ctx.fillRect(-s/2,-s/2,s,s); break;
+        case 'hex':
+          ctx.beginPath();
+          for(let i=0;i<6;i++) ctx.lineTo(Math.cos(i*Math.PI/3)*s/2, Math.sin(i*Math.PI/3)*s/2);
+          ctx.closePath(); ctx.fill(); break;
+      }
+      ctx.restore();
+    }
+
+    // Main pattern generators
+    let rand = Math.random;
+    function initRng(){ rand = rngFactory(state.seed || 1); }
+    initRng();
+
+    function pickColor(i, total){
+      const pal = palettes[state.palette] || palettes.neon;
+      const idx = Math.floor(((i/Math.max(1,total-1))*(pal.length)) % pal.length);
+      const base = pal[idx];
+      return base;
+    }
+
+    function radialPattern(w,h,dt){
+      const cx = w*0.5, cy = h*0.5;
+      const copies = Math.max(1, state.copies | 0);
+      const radius = Math.min(w,h) * 0.45 * state.density;
+      for(let i=0;i<copies;i++){
+        const angle = (i / copies) * Math.PI*2 + state.t*0.2*(state.autoRotate?1:0);
+        const mx = cx + Math.cos(angle) * radius * (0.3 + state.mx*0.9);
+        const my = cy + Math.sin(angle) * radius * (0.3 + state.my*0.9);
+        const s = (20 + 120 * (state.wobble * Math.abs(Math.sin(state.t*0.5 + i)))) * (state.density);
+        const rot = angle + state.t*0.1 * (0.5 + (state.mx-0.5));
+        ctx.globalAlpha = 0.9 * (0.4 + 0.6* (i / copies));
+        const col = pickColor(i,copies);
+        drawShape(mx,my,s,rot,col);
+      }
+    }
+
+    function gridPattern(w,h,dt){
+      const cols = Math.max(3, Math.floor(8 * state.density));
+      const rows = Math.max(3, Math.floor(6 * state.density));
+      const cellW = w / cols; const cellH = h / rows;
+      let idx = 0;
+      for(let r=0;r<rows;r++) for(let cI=0;cI<cols;cI++){
+        const x = (cI+0.5)*cellW + (Math.sin(state.t*0.5 + idx) * 0.2 * cellW * (state.mx - 0.5));
+        const y = (r+0.5)*cellH + (Math.cos(state.t*0.5 + idx) * 0.2 * cellH * (state.my - 0.5));
+        const s = Math.min(cellW,cellH) * (0.2 + 0.6 * Math.abs(Math.sin(state.t*0.3 + idx)));
+        const rot = state.t*0.3*(idx%2?1:-1) + (state.mx-0.5);
+        ctx.globalAlpha = 0.9;
+        const col = pickColor(idx, cols*rows);
+        drawShape(x,y,s,rot,col);
+        idx++;
+      }
+    }
+
+    function voronoiish(w,h,dt){
+      const n = Math.max(12, Math.floor(40 * state.density));
+      const points = [];
+      for(let i=0;i<n;i++) points.push([Math.floor(rand()*w), Math.floor(rand()*h)]);
+      for(let i=0;i<n;i++){
+        const p = points[i];
+        const s = 20 + 180 * (Math.abs(Math.sin(state.t*0.4 + i)));
+        ctx.globalAlpha = 0.85;
+        const jitterX = Math.sin(state.t + i)*20*(state.mx-0.5);
+        const jitterY = Math.cos(state.t + i)*20*(state.my-0.5);
+        const col = pickColor(i,n);
+        drawShape(p[0]+jitterX, p[1]+jitterY, s*state.density, state.t*0.2 + i, col);
+      }
+    }
+
+    function flowLines(w,h,dt){
+      const rows = Math.max(10, Math.floor(120 * state.density));
+      for(let i=0;i<rows;i++){
+        const y = (i/rows)*h;
+        ctx.beginPath();
+        const amp = 40 + Math.sin(state.t*0.7 + i) * 80 * state.mx;
+        for(let x=0;x<w;x+=20){
+          const yy = y + Math.sin((x*0.005) + state.t*0.6 + i) * amp;
+          if(x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+        }
+        ctx.lineWidth = 2 + (i%4);
+        ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = pickColor(i,rows);
+        ctx.stroke();
+      }
+    }
+
+    // Animation loop
+    function tick(now){
+      if(!lastTime) lastTime = now; const dt = (now-lastTime)/1000; lastTime = now;
+      state.t += dt * state.speed;
+      const w = c.clientWidth, h = c.clientHeight;
+
+      // Motion blur / clear
+      if(state.motionBlur){
+        ctx.fillStyle = 'rgba(6,10,20,0.15)';
+        ctx.fillRect(0,0,w,h);
+      } else {
+        ctx.clearRect(0,0,w,h);
+      }
+
+      // subtle background vignette
+      const g = ctx.createLinearGradient(0,0,0,h);
+      g.addColorStop(0,'rgba(255,255,255,0.01)');
+      g.addColorStop(1,'rgba(0,0,0,0.05)');
+      ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+
+      // set blend mode and scale depending on DPR transform set earlier
+      ctx.globalCompositeOperation = state.blend;
+
+      // adjust global alpha slightly by distance from center
+      const centerDist = Math.hypot(state.mx-0.5,state.my-0.5);
+      ctx.globalAlpha = 1.0 - Math.min(0.6, centerDist*0.6);
+
+      // choose pattern
+      switch(state.pattern){
+        case 'radial': radialPattern(w,h,dt); break;
+        case 'grid': gridPattern(w,h,dt); break;
+        case 'voronoi': voronoiish(w,h,dt); break;
+        case 'flow': flowLines(w,h,dt); break;
+      }
+
+      // post
+      window.requestAnimationFrame(tick);
+    }
+
+    // initialize and start
+    let lastTime = null;
+    function start(){
+      resize();
+      bindControls();
+      randomize();
+      // seed is set in randomize
+      initRng();
+      // initial background
+      ctx.fillStyle = 'rgba(4,8,16,1)'; ctx.fillRect(0,0,c.clientWidth,c.clientHeight);
+      window.requestAnimationFrame(tick);
+    }
+
+    // allow keyboard shortcuts for fun
+    window.addEventListener('keydown', e=>{
+      if(e.key === 'r') randomize();
+      if(e.key === 's') savePNG();
+      if(e.key === ' ') state.motionBlur = !state.motionBlur;
+    });
+
+    // boot
+    start();
+  </script>
+</body>
+</html>
