@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Code Generator</title>
+  <style>
+    :root{--accent:#2563eb}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; padding:24px; background:#f7fafc; color:#0f172a}
+    .wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    header{grid-column:1/-1;display:flex;align-items:center;gap:16px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:#475569;font-size:13px}
+    .card{background:white;border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    label{display:block;font-size:13px;color:#334155;margin-bottom:6px}
+    input[type=text], textarea, select, input[type=number]{width:100%;padding:10px;border:1px solid #e6edf3;border-radius:8px;font-size:14px}
+    .row{display:flex;gap:12px}
+    .row > *{flex:1}
+    .small{font-size:12px;color:#64748b}
+    .controls{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    button{background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
+    button.secondary{background:#eef2ff;color:var(--accent);border:1px solid #c7d2fe}
+    .preview-area{display:flex;flex-direction:column;align-items:center;gap:12px}
+    #qrcode-wrap{background:white;padding:16px;border-radius:12px;display:inline-block}
+    canvas, svg{display:block}
+    .actions{display:flex;gap:8px}
+    input[type=color]{height:40px;width:56px;padding:4px;border-radius:8px;border:1px solid #e6edf3}
+    .file-input{display:flex;align-items:center;gap:8px}
+    .muted{color:#64748b;font-size:12px}
+    footer{grid-column:1/-1;margin-top:8px;color:#64748b;font-size:12px}
+    @media(max-width:980px){.wrap{grid-template-columns:1fr;}.preview-area{order:-1}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>QR Code Generator</h1>
+        <p class="lead">Instant QR codes — customize size, colors, error-correction and add a small logo. Works offline (except icon CDN).</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <label for="text">Text / URL</label>
+      <textarea id="text" rows="3" placeholder="https://example.com or any text">https://example.com</textarea>
+
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:end;">
+        <div style="flex:1">
+          <label for="size">Size (px)</label>
+          <input id="size" type="number" value="320" min="64" max="2048">
+        </div>
+        <div style="width:160px">
+          <label for="margin">Margin (modules)</label>
+          <input id="margin" type="number" value="4" min="0" max="20">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label for="ec">Error correction</label>
+          <select id="ec">
+            <option value="low">L — Low (7%)</option>
+            <option value="medium">M — Medium (15%)</option>
+            <option value="quartile" selected>Q — Quartile (25%)</option>
+            <option value="high">H — High (30%)</option>
+          </select>
+        </div>
+        <div>
+          <label for="render">Render mode</label>
+          <select id="render">
+            <option value="canvas" selected>Canvas (PNG)</option>
+            <option value="svg">SVG (scalable)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:center;">
+        <div>
+          <label for="fg">Foreground</label>
+          <input id="fg" type="color" value="#000000">
+        </div>
+        <div>
+          <label for="bg">Background</label>
+          <input id="bg" type="color" value="#ffffff">
+        </div>
+        <div style="flex:1">
+          <label for="bgTransparent">Background transparent</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <input id="bgTransparent" type="checkbox"> <span class="small muted">Make background transparent (PNG only)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div class="file-input">
+          <label for="logo">Logo (optional, small)</label>
+          <input id="logo" type="file" accept="image/*">
+        </div>
+        <div class="small muted">Tip: use a square logo under ~90px for best results.</div>
+      </div>
+
+      <div class="controls">
+        <button id="gen">Generate</button>
+        <button class="secondary" id="clear">Clear</button>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="downloadPng">Download PNG</button>
+          <button id="downloadSvg">Download SVG</button>
+          <button id="copyPng">Copy PNG</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;font-size:12px;color:#475569">Generated on your device. No data is sent anywhere unless you use the optional CDN for the icon (the QR generation library is loaded from a trusted CDN).</div>
+    </section>
+
+    <aside class="card preview-area">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+        <div>
+          <label class="small">Preview</label>
+        </div>
+        <div class="muted small">Right-click image to save as well</div>
+      </div>
+
+      <div id="qrcode-wrap" aria-live="polite">
+        <!-- QR output goes here -->
+        <canvas id="qrcanvas" style="display:none"></canvas>
+        <div id="svgwrap" style="display:none"></div>
+      </div>
+
+      <div class="actions">
+        <button id="zoomIn">Zoom +</button>
+        <button id="zoomOut">Zoom -</button>
+        <button id="resetZoom" class="secondary">Reset</button>
+      </div>
+
+      <div class="muted small" style="text-align:center;max-width:320px">You can drag & drop the downloaded PNG/SVG into chat or your app. Use the "Copy PNG" to paste directly into other apps that accept images.</div>
+    </aside>
+
+    <footer>Built with a lightweight open-source QR library. Try different error-correction levels if you're embedding logos or printing on small surfaces.</footer>
+  </div>
+
+  <!-- QR code library from jsDelivr: https://github.com/soldair/node-qrcode (browser build) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    // Elements
+    const textEl = document.getElementById('text');
+    const sizeEl = document.getElementById('size');
+    const ecEl = document.getElementById('ec');
+    const renderEl = document.getElementById('render');
+    const fgEl = document.getElementById('fg');
+    const bgEl = document.getElementById('bg');
+    const marginEl = document.getElementById('margin');
+    const logoEl = document.getElementById('logo');
+    const bgTransEl = document.getElementById('bgTransparent');
+
+    const genBtn = document.getElementById('gen');
+    const clearBtn = document.getElementById('clear');
+    const downloadPngBtn = document.getElementById('downloadPng');
+    const downloadSvgBtn = document.getElementById('downloadSvg');
+    const copyPngBtn = document.getElementById('copyPng');
+
+    const canvas = document.getElementById('qrcanvas');
+    const svgWrap = document.getElementById('svgwrap');
+
+    let lastSvgString = '';
+    let lastPngDataUrl = '';
+    let uploadedLogo = null;
+    let zoom = 1;
+
+    logoEl.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if(!f) { uploadedLogo = null; return; }
+      const reader = new FileReader();
+      reader.onload = () => { uploadedLogo = reader.result; }; // dataURL
+      reader.readAsDataURL(f);
+    });
+
+    function ecFromSelect(v){
+      switch(v){
+        case 'low': return 'L';
+        case 'medium': return 'M';
+        case 'quartile': return 'Q';
+        case 'high': return 'H';
+      }
+      return 'Q';
+    }
+
+    async function generate(){
+      const text = textEl.value || '';
+      if(!text.trim()){ alert('Please enter text or URL to encode.'); return; }
+
+      const size = Math.max(64, Math.min(2048, Number(sizeEl.value) || 320));
+      const margin = Math.max(0, Math.min(40, Number(marginEl.value) || 4));
+      const ec = ecFromSelect(ecEl.value);
+      const fg = fgEl.value || '#000';
+      const bg = bgEl.value || '#fff';
+      const render = renderEl.value;
+      const bgTransparent = bgTransEl.checked;
+
+      // Use the qrcode library to generate SVG or canvas
+      const opts = { errorCorrectionLevel: ec, margin: margin, width: size, color: { dark: fg, light: bgTransparent ? '#00000000' : bg } };
+
+      if(render === 'svg'){
+        try{
+          const svgString = await QRCode.toString(text, { ...opts, type: 'svg' });
+          lastSvgString = svgString;
+          svgWrap.innerHTML = svgString;
+          // If user provided a logo, try to embed it into the SVG by inserting an <image> element centered
+          if(uploadedLogo){
+            // compute a small logo size relative to the canvas (about 20%)
+            const logoSize = Math.round(size * 0.2);
+            // insert image into svg
+            // If SVG has viewBox, use that; otherwise set width/height
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgString, 'image/svg+xml');
+            const svgEl = doc.documentElement;
+            svgEl.setAttribute('width', size);
+            svgEl.setAttribute('height', size);
+            const img = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+            img.setAttributeNS(null, 'href', uploadedLogo);
+            img.setAttribute('width', logoSize);
+            img.setAttribute('height', logoSize);
+            img.setAttribute('x', (size - logoSize)/2);
+            img.setAttribute('y', (size - logoSize)/2);
+            img.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svgEl.appendChild(img);
+            const serializer = new XMLSerializer();
+            const withLogo = serializer.serializeToString(svgEl);
+            svgWrap.innerHTML = withLogo;
+            lastSvgString = withLogo;
+          }
+
+          svgWrap.style.display = '';
+          canvas.style.display = 'none';
+          lastPngDataUrl = '';
+        }catch(err){ console.error(err); alert('Failed to generate SVG: '+err); }
+      }else{
+        // Canvas path (PNG). We'll render the QR as a dataURL and optionally draw the logo on top.
+        try{
+          // QRCode.toDataURL returns a PNG dataURL
+          const dataUrl = await QRCode.toDataURL(text, opts);
+          const img = new Image();
+          img.onload = () => {
+            canvas.width = Math.round(size * zoom);
+            canvas.height = Math.round(size * zoom);
+            const ctx = canvas.getContext('2d');
+            // draw background (if transparent flagged, we clear the canvas)
+            if(bgTransparent){
+              ctx.clearRect(0,0,canvas.width,canvas.height);
+            }else{
+              ctx.fillStyle = bg;
+              ctx.fillRect(0,0,canvas.width,canvas.height);
+            }
+            // draw the generated QR
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            if(uploadedLogo){
+              const logoImg = new Image();
+              logoImg.onload = () => {
+                const logoSize = Math.round(size * 0.2 * zoom);
+                const lx = Math.round((canvas.width - logoSize)/2);
+                const ly = Math.round((canvas.height - logoSize)/2);
+                // white rounded background for the logo for contrast
+                const pad = Math.round(logoSize * 0.18);
+                const boxW = logoSize + pad*2;
+                const boxH = logoSize + pad*2;
+                const rx = lx - pad;
+                const ry = ly - pad;
+                ctx.save();
+                // draw rounded rect
+                const r = Math.round(boxW * 0.12);
+                ctx.fillStyle = '#fff';
+                roundRect(ctx, rx, ry, boxW, boxH, r);
+                ctx.fill();
+                ctx.restore();
+
+                // draw logo
+                ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
+                lastPngDataUrl = canvas.toDataURL('image/png');
+              };
+              logoImg.src = uploadedLogo;
+            }else{
+              lastPngDataUrl = canvas.toDataURL('image/png');
+            }
+
+            canvas.style.display = '';
+            svgWrap.style.display = 'none';
+          };
+          img.src = dataUrl;
+        }catch(err){ console.error(err); alert('Failed to generate PNG: '+err); }
+      }
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // Download SVG
+    downloadSvgBtn.addEventListener('click', () => {
+      if(!lastSvgString){ alert('No SVG available — generate with "SVG" render selected.'); return; }
+      const blob = new Blob([lastSvgString], {type: 'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qrcode.svg';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // Download PNG
+    downloadPngBtn.addEventListener('click', () => {
+      // ensure we have a PNG
+      if(canvas.style.display === 'none'){ alert('Generate a PNG first (choose Canvas render or switch to Canvas).'); return; }
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qrcode.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    // Copy PNG to clipboard (async clipboard)
+    copyPngBtn.addEventListener('click', async () => {
+      try{
+        const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
+        const item = new ClipboardItem({'image/png': blob});
+        await navigator.clipboard.write([item]);
+        alert('PNG copied to clipboard. Paste into apps that accept images.');
+      }catch(err){
+        console.error(err);
+        alert('Copy failed: your browser may block clipboard image writes. Use Download instead.');
+      }
+    });
+
+    genBtn.addEventListener('click', () => { zoom = 1; generate(); });
+    clearBtn.addEventListener('click', () => { textEl.value=''; sizeEl.value=320; marginEl.value=4; fgEl.value='#000000'; bgEl.value='#ffffff'; uploadedLogo=null; logoEl.value=''; svgWrap.innerHTML=''; canvas.style.display='none'; svgWrap.style.display='none'; });
+
+    // Zoom controls
+    document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(3, zoom + 0.25); regenerateWithZoom(); });
+    document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(0.25, zoom - 0.25); regenerateWithZoom(); });
+    document.getElementById('resetZoom').addEventListener('click', () => { zoom = 1; regenerateWithZoom(); });
+
+    function regenerateWithZoom(){
+      // If canvas visible, re-run canvas gen with new zoom
+      if(canvas.style.display !== 'none'){
+        generate();
+      }else if(svgWrap.style.display !== 'none'){
+        // scale the svg by CSS transform
+        svgWrap.querySelector('svg')?.style && (svgWrap.querySelector('svg').style.transform = `scale(${zoom})`);
+      }
+    }
+
+    // keyboard: ctrl+enter to generate
+    document.addEventListener('keydown', (e) => { if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ generate(); } });
+
+    // quick generate on load
+    window.addEventListener('load', () => { generate(); });
+  </script>
+</body>
+</html>
