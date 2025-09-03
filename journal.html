@@ -17,6 +17,7 @@
   <textarea id="journalInput" placeholder="Write your thoughts..."></textarea><br>
   <button onclick="saveEntry()">Save Entry</button>
   <button onclick="exportEntries()">Export Entries</button>
+  <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" />
 
   <h2>Previous Entries</h2>
   <div id="entries"></div>
@@ -76,6 +77,51 @@
       a.download = 'journal_entries.txt';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // Import entries from a .txt file with date detection
+    function importEntries(event) {
+      let file = event.target.files[0];
+      if (!file) return;
+
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        let content = e.target.result.trim();
+        if (!content) return;
+
+        let lines = content.split(/\r?\n/);
+        let entries = [];
+        let currentEntry = null;
+
+        // Regex to detect common date formats (MM/DD/YYYY, YYYY-MM-DD, locale strings)
+        let dateRegex = /(\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}|\w{3,9}\s+\d{1,2},\s*\d{4}|\d{1,2}:\d{2}:\d{2})/;
+
+        lines.forEach(line => {
+          if (dateRegex.test(line)) {
+            if (currentEntry) {
+              entries.push(currentEntry);
+            }
+            currentEntry = { time: line.trim(), text: '' };
+          } else if (currentEntry) {
+            currentEntry.text += (currentEntry.text ? "\n" : "") + line.trim();
+          }
+        });
+
+        if (currentEntry) {
+          entries.push(currentEntry);
+        }
+
+        if (entries.length === 0) {
+          alert('No valid entries found in file.');
+          return;
+        }
+
+        if (!confirm('This will overwrite your current journal entries. Continue?')) return;
+
+        localStorage.setItem('journalEntries', JSON.stringify(entries));
+        loadEntries();
+      };
+      reader.readAsText(file);
     }
 
     // Load entries when page loads
