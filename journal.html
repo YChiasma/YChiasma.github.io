@@ -49,6 +49,7 @@
   <textarea id="journalInput" placeholder="Write your thoughts..."></textarea><br>
   <button onclick="saveEntry()">Save Entry</button>
   <button onclick="exportEntries()">Export Entries</button>
+  <button onclick="copyEntries()">Copy Entries</button>
   <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" />
 
   <h2>Previous Entries</h2>
@@ -113,7 +114,7 @@
         alert('No entries to export.');
         return;
       }
-      let content = entries.map(e => `${e.time}\n${e.text}\n\n`).join('');
+      let content = entries.map(e => `${e.time}\n${e.text}\n`).join('');
       let blob = new Blob([content], { type: 'text/plain' });
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a');
@@ -121,6 +122,21 @@
       a.download = 'journal_entries.txt';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // Copy entries to clipboard
+    function copyEntries() {
+      let entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+      if (entries.length === 0) {
+        alert('No entries to copy.');
+        return;
+      }
+      let content = entries.map(e => `${e.time}\n${e.text}\n`).join('');
+      navigator.clipboard.writeText(content).then(() => {
+        alert('Entries copied to clipboard!');
+      }).catch(err => {
+        alert('Failed to copy entries: ' + err);
+      });
     }
 
     // Import entries from a .txt file with date detection
