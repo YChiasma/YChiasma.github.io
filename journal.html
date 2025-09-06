@@ -42,6 +42,30 @@
     .modal .overwrite { background: #d9534f; color: #fff; }
     .modal .append { background: #5cb85c; color: #fff; }
     .modal .cancel { background: #777; color: #fff; }
+
+    /* Toast styles */
+    #toast {
+      visibility: hidden;
+      min-width: 200px;
+      margin-left: -100px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 2000;
+      left: 50%;
+      bottom: 30px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.5s, bottom 0.5s;
+    }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+    }
   </style>
 </head>
 <body>
@@ -64,6 +88,9 @@
       <button class="cancel" onclick="handleImportChoice('C')">Cancel</button>
     </div>
   </div>
+
+  <!-- Toast notification -->
+  <div id="toast"></div>
 
   <script>
     let pendingEntries = [];
@@ -111,10 +138,10 @@
     function exportEntries() {
       let entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
       if (entries.length === 0) {
-        alert('No entries to export.');
+        showToast('No entries to export.');
         return;
       }
-      let content = entries.map(e => `${e.time}\n${e.text}\n`).join('');
+      let content = entries.map(e => `${e.time}\n${e.text}\n\n`).join('');
       let blob = new Blob([content], { type: 'text/plain' });
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a');
@@ -122,21 +149,32 @@
       a.download = 'journal_entries.txt';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('Entries exported successfully!');
     }
 
     // Copy entries to clipboard
     function copyEntries() {
       let entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
       if (entries.length === 0) {
-        alert('No entries to copy.');
+        showToast('No entries to copy.');
         return;
       }
-      let content = entries.map(e => `${e.time}\n${e.text}\n`).join('');
+      let content = entries.map(e => `${e.time}\n${e.text}\n\n`).join('');
       navigator.clipboard.writeText(content).then(() => {
-        alert('Entries copied to clipboard!');
+        showToast('Entries copied to clipboard!');
       }).catch(err => {
-        alert('Failed to copy entries: ' + err);
+        showToast('Failed to copy entries: ' + err);
       });
+    }
+
+    // Show toast notification
+    function showToast(message) {
+      let toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'show';
+      setTimeout(() => {
+        toast.className = toast.className.replace('show', '');
+      }, 3000);
     }
 
     // Import entries from a .txt file with date detection
@@ -172,7 +210,7 @@
         }
 
         if (newEntries.length === 0) {
-          alert('No valid entries found in file.');
+          showToast('No valid entries found in file.');
           return;
         }
 
@@ -201,6 +239,7 @@
       localStorage.setItem('journalEntries', JSON.stringify(entries));
       pendingEntries = [];
       loadEntries();
+      showToast('Entries imported successfully!');
     }
 
     // Load entries when page loads
