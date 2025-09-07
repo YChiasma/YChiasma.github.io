@@ -197,6 +197,7 @@
         lines.forEach(line => {
           if (dateRegex.test(line)) {
             if (currentEntry) {
+              currentEntry.text = currentEntry.text.trim();
               newEntries.push(currentEntry);
             }
             currentEntry = { time: line.trim(), text: '' };
@@ -206,6 +207,7 @@
         });
 
         if (currentEntry) {
+          currentEntry.text = currentEntry.text.trim();
           newEntries.push(currentEntry);
         }
 
