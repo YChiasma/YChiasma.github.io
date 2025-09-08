@@ -66,6 +66,9 @@
       opacity: 1;
       bottom: 50px;
     }
+
+    /* Hidden file input */
+    #importFile { display: none; }
   </style>
 </head>
 <body>
@@ -74,6 +77,7 @@
   <button onclick="saveEntry()">Save Entry</button>
   <button onclick="exportEntries()">Export Entries</button>
   <button onclick="copyEntries()">Copy Entries</button>
+  <button onclick="document.getElementById('importFile').click()">Import Entries</button>
   <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" />
 
   <h2>Previous Entries</h2>
