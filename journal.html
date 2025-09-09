@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Local Journal</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; }
@@ -67,8 +68,14 @@
       bottom: 50px;
     }
 
-    /* Hidden file input */
-    #importFile { display: none; }
+    /* Responsive styles for mobile */
+    @media (max-width: 768px) {
+      body { padding: 10px; max-width: 100%; }
+      textarea { height: 100px; }
+      button { display: block; width: 100%; margin: 8px 0; }
+      .modal { width: 90%; padding: 15px; }
+      .entry { font-size: 0.95em; }
+    }
   </style>
 </head>
 <body>
@@ -78,7 +85,7 @@
   <button onclick="exportEntries()">Export Entries</button>
   <button onclick="copyEntries()">Copy Entries</button>
   <button onclick="document.getElementById('importFile').click()">Import Entries</button>
-  <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" />
+  <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" style="display:none;" />
 
   <h2>Previous Entries</h2>
   <div id="entries"></div>
