@@ -75,6 +75,18 @@
       button:not(.delete-btn) { display: block; width: 100%; margin: 8px 0; }
       .modal { width: 90%; padding: 15px; }
       .entry { font-size: 0.95em; }
+
+      #toast {
+        font-size: 12px;
+        padding: 10px;
+        min-width: 160px;
+        margin-left: -80px;
+        bottom: -60px; /* start off-screen */
+        transition: opacity 0.5s, bottom 0.5s;
+      }
+      #toast.show {
+        bottom: 40px; /* slides up when visible */
+      }
     }
   </style>
 </head>
@@ -202,8 +214,8 @@
         let newEntries = [];
         let currentEntry = null;
 
-        // Regex to detect common date formats (MM/DD/YYYY, YYYY-MM-DD, locale strings)
-        let dateRegex = /(\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}|\w{3,9}\s+\d{1,2},\s*\d{4}|\d{1,2}:\d{2}:\d{2})/;
+        // Regex to detect common date formats (MM/DD/YYYY, YYYY-MM-DD, locale strings, Notepad.exe format)
+        let dateRegex = /(\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}|\w{3,9}\s+\d{1,2},\s*\d{4}|\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2}\s?(AM|PM)\s+\d{1,2}\/\d{1,2}\/\d{4})/i;
 
         lines.forEach(line => {
           if (dateRegex.test(line)) {
