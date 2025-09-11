@@ -93,9 +93,10 @@
 <body>
   <h1>My Journal</h1>
   <textarea id="journalInput" placeholder="Write your thoughts..."></textarea><br>
-  <button onclick="saveEntry()">Save Entry</button>
+  <button onclick="saveEntry">Save Entry</button>
   <button onclick="exportEntries()">Export Entries</button>
   <button onclick="copyEntries()">Copy Entries</button>
+  <button onclick="shareEntries()">Share Entries</button>
   <button onclick="document.getElementById('importFile').click()">Import Entries</button>
   <input type="file" id="importFile" accept=".txt" onchange="importEntries(event)" style="display:none;" />
 
@@ -188,6 +189,28 @@
       }).catch(err => {
         showToast('Failed to copy entries: ' + err);
       });
+    }
+
+    // Share entries using Web Share API
+    function shareEntries() {
+      let entries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+      if (entries.length === 0) {
+        showToast('No entries to share.');
+        return;
+      }
+      let content = entries.map(e => `${e.time}\n${e.text}\n\n`).join('');
+      if (navigator.share) {
+        navigator.share({
+          title: 'My Journal Entries',
+          text: content
+        }).then(() => {
+          showToast('Entries shared successfully!');
+        }).catch(err => {
+          showToast('Sharing canceled or failed.');
+        });
+      } else {
+        showToast('Sharing not supported on this device.');
+      }
     }
 
     // Show toast notification
