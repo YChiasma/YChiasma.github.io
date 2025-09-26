@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WYSIWYG Paste + Render</title>
+  <style>
+    :root{ --bg:#f6f7fb; --card:#fff; --muted:#6b7280; --accent:#2563eb }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{background:var(--bg);padding:28px;box-sizing:border-box;color:#0f172a}
+    .wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:20px}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06);padding:16px}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .toolbar{display:flex;gap:6px;flex-wrap:wrap}
+    button{background:#eef2ff;border:1px solid rgba(15,23,42,0.04);padding:8px 10px;border-radius:8px;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,var(--accent),#1e40af);color:#fff}
+    button.ghost{background:transparent;border:1px dashed rgba(15,23,42,0.06)}
+    .editor{min-height:260px;border:1px dashed rgba(15,23,42,0.06);padding:12px;border-radius:8px;overflow:auto}
+    .editor[contenteditable="true"]:focus{outline:3px solid rgba(37,99,235,0.12)}
+    .muted{color:var(--muted);font-size:13px}
+    .renderArea{min-height:260px;border-radius:8px;padding:12px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(15,23,42,0.03);overflow:auto}
+    textarea{width:100%;min-height:120px;padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);resize:vertical}
+    .row{display:flex;gap:12px;align-items:center}
+    .split{display:flex;flex-direction:column;gap:12px}
+    .foot{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+    .small{font-size:13px}
+    a{color:var(--accent)}
+    .hidden{display:none}
+
+    /* Fullscreen overlay styles */
+    #fullscreenOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #fff;
+      z-index: 1000;
+      overflow: auto;
+      padding: 20px;
+      display: none;
+    }
+    #fullscreenOverlayContent {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    #fullscreenClose, #fullscreenPrint {
+      position: fixed;
+      top: 16px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+      z-index: 1100;
+    }
+    #fullscreenClose { right: 16px; }
+    #fullscreenPrint { right: 80px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div>
+          <h2 style="margin:0;font-size:18px">WYSIWYG editor — paste rich text</h2>
+          <div class="muted">Paste from Word / Google Docs / webpages — formatting is preserved when possible.</div>
+        </div>
+        <div class="row">
+          <button id="btnRender" class="primary">Render into document</button>
+          <button id="btnClear" class="ghost">Clear</button>
+          <button id="btnFullscreen" class="ghost">Full view</button>
+        </div>
+      </header>
+
+      <div class="toolbar" role="toolbar" aria-label="Editor toolbar">
+        <button data-cmd="bold" title="Bold (Ctrl/⌘+B)">Bold</button>
+        <button data-cmd="italic" title="Italic (Ctrl/⌘+I)">Italic</button>
+        <button data-cmd="underline" title="Underline (Ctrl/⌘+U)">Underline</button>
+        <button data-cmd="insertUnorderedList">• List</button>
+        <button data-cmd="insertOrderedList">1. List</button>
+        <button id="btnLink">Link</button>
+        <button id="btnImage">Image (URL)</button>
+        <button id="btnSource">Toggle Source</button>
+        <button id="btnCopy">Copy HTML</button>
+      </div>
+
+      <div id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Rich text editor">
+        <p>Try pasting formatted text here (Ctrl/Cmd+V). The editor will preserve HTML where available.</p>
+      </div>
+
+      <div class="foot">
+        <div class="muted small">Tip: The editor preserves <em>many</em> styles from the clipboard but strips scripts and inline event handlers for safety.</div>
+      </div>
+    </div>
+
+    <div class="card split">
+      <div>
+        <h3 style="margin:0 0 8px 0">Rendered output</h3>
+        <div id="render" class="renderArea" aria-live="polite">
+          <em class="muted">Rendered content will appear here when you click "Render into document".</em>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="margin:8px 0">HTML source</h4>
+        <textarea id="source" class="hidden" placeholder="HTML source"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen overlay -->
+  <div id="fullscreenOverlay">
+    <div id="fullscreenOverlayContent"></div>
+  </div>
+  <button id="fullscreenPrint">🖨 Print</button>
+  <button id="fullscreenClose">✕ Close</button>
+
+  <script>
+    // Formatting buttons
+    document.querySelectorAll('[data-cmd]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cmd = btn.getAttribute('data-cmd');
+        document.execCommand(cmd, false, null);
+        editor.focus();
+      });
+    });
+
+    const editor = document.getElementById('editor');
+    const render = document.getElementById('render');
+    const source = document.getElementById('source');
+
+    // Paste handling
+    editor.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const clipboard = (e.clipboardData || window.clipboardData);
+      const html = clipboard.getData('text/html');
+      const text = clipboard.getData('text/plain');
+      if (html) pasteHtmlAtCaret(sanitizeHTML(html));
+      else if (text) pasteHtmlAtCaret(escapeHtml(text).replace(/\n/g, '<br>'));
+    });
+
+    function pasteHtmlAtCaret(html) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        editor.insertAdjacentHTML('beforeend', html);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      let node, lastNode;
+      while ((node = el.firstChild)) { lastNode = frag.appendChild(node); }
+      range.insertNode(frag);
+      if (lastNode) {
+        range.setStartAfter(lastNode);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    function sanitizeHTML(dirty) {
+      const doc = new DOMParser().parseFromString(dirty, 'text/html');
+      const iterator = document.createNodeIterator(doc, NodeFilter.SHOW_COMMENT);
+      let cur; const toRemove = [];
+      while (cur = iterator.nextNode()) toRemove.push(cur);
+      toRemove.forEach(n => n.parentNode && n.parentNode.removeChild(n));
+      doc.querySelectorAll('script, style, iframe, object, embed').forEach(n => n.remove());
+      doc.querySelectorAll('*').forEach(node => {
+        [...node.attributes].forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const val = attr.value || '';
+          if (name.startsWith('on')) node.removeAttribute(attr.name);
+          if ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(val)) node.removeAttribute(attr.name);
+          if (name === 'style') {
+            const sanitizedStyle = val.replace(/expression\([^\)]*\)/gi, '');
+            node.setAttribute('style', sanitizedStyle);
+          }
+        });
+      });
+      return doc.body.innerHTML;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
+    }
+
+    document.getElementById('btnRender').addEventListener('click', () => {
+      const html = editor.innerHTML;
+      const sanitized = sanitizeHTML(html);
+      render.innerHTML = sanitized || '<em class="muted">(empty)</em>';
+      if (!source.classList.contains('hidden')) source.value = sanitized;
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      if (confirm('Clear editor content?')) {
+        editor.innerHTML = '';
+        render.innerHTML = '<em class="muted">Rendered content will appear here when you click "Render into document".</em>';
+        source.value = '';
+      }
+    });
+
+    document.getElementById('btnLink').addEventListener('click', () => {
+      const url = prompt('Enter a URL to link to:');
+      if (url) document.execCommand('createLink', false, url);
+    });
+
+    document.getElementById('btnImage').addEventListener('click', () => {
+      const url = prompt('Enter image URL (data URLs allowed):');
+      if (url && !/^\s*javascript:/i.test(url)) document.execCommand('insertImage', false, url);
+      else if (url) alert('javascript: URLs are not allowed');
+    });
+
+    document.getElementById('btnSource').addEventListener('click', () => {
+      if (source.classList.contains('hidden')) {
+        source.value = editor.innerHTML;
+        source.classList.remove('hidden');
+        source.style.display = 'block';
+        editor.classList.add('hidden');
+      } else {
+        editor.innerHTML = source.value;
+        source.classList.add('hidden');
+        editor.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btnCopy').addEventListener('click', async () => {
+      try {
+        const html = sanitizeHTML(editor.innerHTML);
+        await navigator.clipboard.writeText(html);
+        alert('Sanitized HTML copied to clipboard');
+      } catch (err) {
+        source.value = sanitizeHTML(editor.innerHTML);
+        source.classList.remove('hidden');
+        alert('Could not copy automatically; HTML placed in the source box.');
+      }
+    });
+
+    editor.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') { document.execCommand('bold'); e.preventDefault(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') { document.execCommand('italic'); e.preventDefault(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') { document.execCommand('underline'); e.preventDefault(); }
+    });
+
+    editor.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const files = (e.dataTransfer || e.clipboardData).files;
+      if (files && files.length) {
+        const f = files[0];
+        if (f.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = () => pasteHtmlAtCaret('<img src="' + reader.result + '" alt="pasted-image"/>');
+          reader.readAsDataURL(f);
+        } else alert('Only image files can be dropped.');
+      }
+    });
+
+    window.addEventListener('load', () => editor.focus());
+
+    // Fullscreen overlay logic
+    const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+    const fullscreenContent = document.getElementById('fullscreenOverlayContent');
+    const fullscreenClose = document.getElementById('fullscreenClose');
+    const fullscreenPrint = document.getElementById('fullscreenPrint');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+
+    btnFullscreen.addEventListener('click', () => {
+      fullscreenContent.innerHTML = render.innerHTML;
+      fullscreenOverlay.style.display = 'block';
+      fullscreenClose.style.display = 'none';
+      fullscreenPrint.style.display = 'none';
+    });
+
+    fullscreenClose.addEventListener('click', () => {
+      fullscreenOverlay.style.display = 'none';
+    });
+
+    fullscreenPrint.addEventListener('click', () => {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      document.body.appendChild(iframe);
+      iframe.contentDocument.open();
+      iframe.contentDocument.write('<!doctype html><html><head><title>Print</title></head><body>' + fullscreenContent.innerHTML + '</body></html>');
+      iframe.contentDocument.close();
+      iframe.onload = () => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        document.body.removeChild(iframe);
+      };
+    });
+
+    let mouseMoveTimer;
+    document.addEventListener('mousemove', () => {
+      if (fullscreenOverlay.style.display === 'block') {
+        fullscreenClose.style.display = 'block';
+        fullscreenPrint.style.display = 'block';
+        clearTimeout(mouseMoveTimer);
+        mouseMoveTimer = setTimeout(() => {
+          fullscreenClose.style.display = 'none';
+          fullscreenPrint.style.display = 'none';
+        }, 1500);
+      }
+    });
+  </script>
+</body>
+</html>
