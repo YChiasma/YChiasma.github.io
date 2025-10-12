@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Log</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/9.0.0/uuidv4.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f9fafb;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 { text-align: center; }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: none;
+    }
+    button {
+      display: block;
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #1e40af; }
+    .entry {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .timestamp {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    #shareLink {
+      font-size: 0.9rem;
+      background: #eef;
+      padding: 0.5rem;
+      border-radius: 6px;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shared Log</h1>
+  <p id="shareLink"></p>
+
+  <textarea id="entryText" placeholder="Write something..."></textarea>
+  <button id="addEntry">Add Entry</button>
+
+  <div id="entries"></div>
+
+  <script>
+    // --- 🔥 Initialize Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
+      authDomain: "shared-log-c1ad7.firebaseapp.com",
+      projectId: "shared-log-c1ad7",
+      storageBucket: "shared-log-c1ad7.firebasestorage.app",
+      messagingSenderId: "178184501497",
+      appId: "1:178184501497:web:e650732c8cf071f6224a28"
+  };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- 🧭 Get or create log ID ---
+    const params = new URLSearchParams(window.location.search);
+    let logId = params.get("log");
+
+    if (!logId) {
+      logId = crypto.randomUUID();
+      window.history.replaceState({}, "", `?log=${logId}`);
+    }
+
+    const shareLink = `${window.location.origin}${window.location.pathname}?log=${logId}`;
+    document.getElementById("shareLink").textContent = `Share this link: ${shareLink}`;
+
+    // --- 📝 References ---
+    const entryText = document.getElementById("entryText");
+    const addBtn = document.getElementById("addEntry");
+    const entriesDiv = document.getElementById("entries");
+
+    // --- 💾 Add entry ---
+    addBtn.onclick = async () => {
+      const text = entryText.value.trim();
+      if (!text) return;
+
+      await db.collection("logs").doc(logId).collection("entries").add({
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      entryText.value = "";
+    };
+
+    // --- 🔁 Listen for updates ---
+    db.collection("logs").doc(logId).collection("entries")
+      .orderBy("timestamp", "desc")
+      .onSnapshot(snapshot => {
+        entriesDiv.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const entry = document.createElement("div");
+          entry.className = "entry";
+
+          const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
+          entry.innerHTML = `
+            <div class="timestamp">${time}</div>
+            <div>${data.text}</div>
+          `;
+          entriesDiv.appendChild(entry);
+        });
+      });
+  </script>
+</body>
+</html>
