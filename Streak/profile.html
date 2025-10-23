@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>User Profile — Streaks</title>
+  <style>
+    body { font-family: Inter, system-ui; background:#0f1724; color:#e6eef8; margin:0; padding:24px; }
+    .container { max-width:720px; margin:auto; }
+    h1 { margin-bottom:8px; }
+    .muted { color:#94a3b8; margin-bottom:20px; }
+    .streak-list { display:grid; gap:12px; }
+    .card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+            padding:14px 18px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; }
+    .name { font-weight:600; }
+    .badge { font-size:12px; padding:3px 8px; border-radius:8px; background:#1e293b; color:#94a3b8; margin-left:8px; }
+    .btn { padding:6px 10px; border:none; border-radius:8px; cursor:pointer; }
+    .btn.view { background:linear-gradient(90deg,#7c3aed,#5b21b6); color:white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="profileTitle">User Profile</h1>
+    <div class="muted" id="profileSubtitle">Loading streaks...</div>
+    <div class="streak-list" id="streakList"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
+      authDomain: "streak-eda1a.firebaseapp.com",
+      projectId: "streak-eda1a",
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Ensure user stays logged in across tabs/pages
+    await setPersistence(auth, browserLocalPersistence);
+
+    const params = new URLSearchParams(window.location.search);
+    const profileUid = params.get("user");
+    const listEl = document.getElementById("streakList");
+    let currentUser = null;
+
+    function renderStreak(name, isPublic, isOwner) {
+      const card = document.createElement("div");
+      card.className = "card";
+      const left = document.createElement("div");
+      left.innerHTML = `<span class="name">${name}</span> ${isPublic ? '<span class="badge">Public</span>' : ''}`;
+      const right = document.createElement("div");
+      const viewBtn = document.createElement("button");
+      viewBtn.textContent = "View";
+      viewBtn.className = "btn view";
+      viewBtn.onclick = () => {
+        const url = `index.html?user=${profileUid}&streak=${encodeURIComponent(name)}`;
+        window.location.href = url;
+      };
+      right.appendChild(viewBtn);
+      if (isOwner && !isPublic) {
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Edit";
+        editBtn.className = "btn";
+        editBtn.onclick = () => {
+          const url = `index.html?edit=true&streak=${encodeURIComponent(name)}`;
+          window.location.href = url;
+        };
+        right.appendChild(editBtn);
+      }
+      card.appendChild(left);
+      card.appendChild(right);
+      listEl.appendChild(card);
+    }
+
+    async function loadProfile(uid, isOwner) {
+      const q = collection(db, "users", uid, "streaks");
+      const snaps = await getDocs(q);
+      listEl.innerHTML = "";
+      snaps.forEach(docSnap => {
+        const data = docSnap.data();
+        if (isOwner || data.public) {
+          renderStreak(docSnap.id, !!data.public, isOwner);
+        }
+      });
+      document.getElementById("profileSubtitle").textContent = isOwner ? "Your streaks" : "Public streaks";
+    }
+
+    onAuthStateChanged(auth, user => {
+      if(user) alert("Logged in!");
+      currentUser = user;
+      if(null == user) return;
+      console.log(user);
+      if(null == profileUid) {
+        let isOwner = true;
+        loadProfile(user.uid, true);
+      }
+      else {console.log(typeof(profileUid));
+        let isOwner = user && user.uid === profileUid;
+        loadProfile(profileUid, isOwner);
+      }
+      document.getElementById("profileTitle").textContent = isOwner ? "My Profile" : "User Profile";
+    });
+  </script>
+</body>
+</html>
