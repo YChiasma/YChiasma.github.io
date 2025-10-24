@@ -111,6 +111,7 @@
     };
 
     // --- 🔁 Listen for updates ---
+    let lastProcessedDate = null;
     db.collection("logs").doc(logId).collection("entries")
       .orderBy("timestamp", "desc")
       .onSnapshot(snapshot => {
@@ -121,6 +122,16 @@
           entry.className = "entry";
 
           const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
+          const date = data.timestamp?.toDate?.().toDateString();
+          if(null == lastProcessedDate) {
+            lastProcessedDate = date;
+          }
+          else if(date != lastProcessedDate) {
+            lastProcessedDate = date;
+            const dateHeader = document.createElement("h3");
+            dateHeader.textContent = date;
+            entriesDiv.appendChild(dateHeader);
+          }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
             <div>${data.text}</div>
