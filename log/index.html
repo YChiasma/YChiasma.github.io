@@ -134,7 +134,7 @@
           }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
-            <div>${data.text}</div>
+            <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
           `;
           entriesDiv.appendChild(entry);
         });
