@@ -47,47 +47,130 @@
     const listEl = document.getElementById("streakList");
     let currentUser = null;
 
-    function renderStreak(name, isPublic, isOwner) {
-      const card = document.createElement("div");
-      card.className = "card";
-      const left = document.createElement("div");
-      left.innerHTML = `<span class="name">${name}</span> ${isPublic ? '<span class="badge">Public</span>' : ''}`;
-      const right = document.createElement("div");
-      const viewBtn = document.createElement("button");
-      viewBtn.textContent = "View";
-      viewBtn.className = "btn view";
-      viewBtn.onclick = () => {
-        const url = `index.html?user=${profileUid}&streak=${encodeURIComponent(name)}`;
-        window.location.href = url;
-      };
-      right.appendChild(viewBtn);
-      if (isOwner && !isPublic) {
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.className = "btn";
-        editBtn.onclick = () => {
-          const url = `index.html?edit=true&streak=${encodeURIComponent(name)}`;
-          window.location.href = url;
-        };
-        right.appendChild(editBtn);
-      }
-      card.appendChild(left);
-      card.appendChild(right);
-      listEl.appendChild(card);
-    }
+    import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    async function loadProfile(uid, isOwner) {
-      const q = collection(db, "users", uid, "streaks");
-      const snaps = await getDocs(q);
-      listEl.innerHTML = "";
-      snaps.forEach(docSnap => {
-        const data = docSnap.data();
-        if (isOwner || data.public) {
-          renderStreak(docSnap.id, !!data.public, isOwner);
-        }
-      });
-      document.getElementById("profileSubtitle").textContent = isOwner ? "Your streaks" : "Public streaks";
+// Helper to calculate streak stats
+async function getStreakInfo(db, uid, streakName) {
+  const daysCol = collection(db, "users", uid, "streaks", streakName, "days");
+  const q = query(daysCol, orderBy("date"));
+  const snap = await getDocs(q);
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const days = snap.docs.map(d => d.id).sort();
+  const doneDays = new Set(days);
+
+  let streakLength = 0;
+  let status = "broken";
+
+  // Check if done today
+  if (doneDays.has(todayStr)) {
+    status = "done";
+  } else {
+    // Find last done date
+    const lastDone = days.length ? new Date(days[days.length - 1]) : null;
+    if (lastDone) {
+      const diffDays = Math.floor((today - lastDone) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) status = "undone";
+      else status = "broken";
+    } else {
+      status = "undone";
     }
+  }
+
+  // Compute current streak length (consecutive recent days)
+  let count = 0;
+  let cursor = new Date(today);
+  while (true) {
+    const dStr = cursor.toISOString().slice(0, 10);
+    if (doneDays.has(dStr)) {
+      count++;
+      cursor.setDate(cursor.getDate() - 1);
+    } else break;
+  }
+  streakLength = count;
+
+  return { streakLength, status };
+}
+
+// Update renderStreak to include stats
+function renderStreakCard(name, info, isPublic, isOwner) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const left = document.createElement("div");
+  left.innerHTML = `
+    <div><span class="name">${name}</span> ${isPublic ? '<span class="badge">Public</span>' : ''}</div>
+    <div style="font-size:14px;color:#94a3b8;">
+      ${info ? `
+        <b>${info.streakLength}</b> day${info.streakLength !== 1 ? 's' : ''} · 
+        <span style="color:${
+          info.status === 'done' ? '#10b981' :
+          info.status === 'undone' ? '#facc15' : '#f87171'
+        }">${info.status}</span>
+      ` : 'Loading...'}
+    </div>
+  `;
+
+  const right = document.createElement("div");
+  const viewBtn = document.createElement("button");
+  viewBtn.textContent = "View";
+  viewBtn.className = "btn view";
+  viewBtn.onclick = () => {
+    const url = `index.html?user=${profileUid}&streak=${encodeURIComponent(name)}`;
+    window.location.href = url;
+  };
+  right.appendChild(viewBtn);
+
+  if (isOwner && !isPublic) {
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.className = "btn";
+    editBtn.onclick = () => {
+      const url = `index.html?edit=true&streak=${encodeURIComponent(name)}`;
+      window.location.href = url;
+    };
+    right.appendChild(editBtn);
+  }
+
+  card.appendChild(left);
+  card.appendChild(right);
+  listEl.appendChild(card);
+}
+
+// Update loadProfile to include streak info fetching
+async function loadProfile(uid, isOwner) {
+  const streaksCol = collection(db, "users", uid, "streaks");
+  const streaksSnap = await getDocs(streaksCol);
+  listEl.innerHTML = "";
+
+  for (const streakDoc of streaksSnap.docs) {
+    const data = streakDoc.data();
+    if (isOwner || data.public) {
+      const card = renderStreakCard(streakDoc.id, null, !!data.public, isOwner);
+      // Fetch streak info asynchronously
+      getStreakInfo(db, uid, streakDoc.id).then(info => {
+        // update card once info is loaded
+        card.querySelector("div > div:nth-child(2)").innerHTML = `
+          <b>${info.streakLength}</b> day${info.streakLength !== 1 ? 's' : ''} · 
+          <span style="color:${
+            info.status === 'done' ? '#10b981' :
+            info.status === 'undone' ? '#facc15' : '#f87171'
+          }">${info.status}</span>
+        `;
+      });
+    }
+  }
+
+  document.getElementById("profileSubtitle").textContent = isOwner ? "Your streaks" : "Public streaks";
+}
+
 
     onAuthStateChanged(auth, user => {
       if(user) alert("Logged in!");
