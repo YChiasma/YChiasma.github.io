@@ -27,7 +27,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -46,13 +46,6 @@
     const profileUid = params.get("user");
     const listEl = document.getElementById("streakList");
     let currentUser = null;
-
-    import { 
-  collection, 
-  getDocs, 
-  query, 
-  orderBy 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // Helper to calculate streak stats
 async function getStreakInfo(db, uid, streakName) {
