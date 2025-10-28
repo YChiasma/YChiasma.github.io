@@ -121,7 +121,7 @@ function renderStreakCard(name, info, isPublic, isOwner) {
   };
   right.appendChild(viewBtn);
 
-  if (isOwner && !isPublic) {
+  if (isOwner) {
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit";
     editBtn.className = "btn";
