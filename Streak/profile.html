@@ -166,7 +166,6 @@ async function loadProfile(uid, isOwner) {
 
 
     onAuthStateChanged(auth, user => {
-      if(user) alert("Logged in!");
       currentUser = user;
       if(null == user) return;
       console.log(user);
