@@ -214,13 +214,13 @@ async function loadProfile(uid, isOwner) {
     onAuthStateChanged(auth, user => {
       currentUser = user;
       if(null == user) return;
-      console.log(user);
+      let isOwner = false;
       if(null == profileUid) {
-        let isOwner = true;
+        isOwner = true;
         loadProfile(user.uid, true);
       }
-      else {console.log(typeof(profileUid));
-        let isOwner = user && user.uid === profileUid;
+      else {
+        isOwner = user && user.uid === profileUid;
         loadProfile(profileUid, isOwner);
       }
       document.getElementById("profileTitle").textContent = isOwner ? "My Profile" : "User Profile";
