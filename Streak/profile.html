@@ -185,7 +185,7 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   viewBtn.className = "btn view";
   viewBtn.style.marginLeft = "8px";
   viewBtn.onclick = () => {
-    const url = `index.html?user=${uid}&streak=${encodeURIComponent(name)}`;
+    const url = `streak?user=${uid}&streak=${encodeURIComponent(name)}`;
     window.location.href = url;
   };
   right.appendChild(viewBtn);
