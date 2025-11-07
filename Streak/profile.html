@@ -88,7 +88,7 @@ async function getStreakInfo(db, uid, streakName) {
       const diffDays = Math.floor((today - lastDone) / (1000 * 60 * 60 * 24));
       if (diffDays === 1) status = "undone";
       else status = "broken";
-    } else status = "undone";
+    } else status = "not started";
   }
 
   let count = 0;
@@ -118,7 +118,8 @@ function makeStatusButton(status) {
   const colorMap = {
     done: "#16a34a",
     undone: "#facc15",
-    broken: "#ef4444"
+    broken: "#ef4444",
+    broken: "#3333ef"
   };
 
   btn.style.background = colorMap[status] || "#64748b";
