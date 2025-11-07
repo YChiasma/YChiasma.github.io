@@ -151,22 +151,6 @@ const publicStreak = urlParams.get("streak");
     let cache = {};
     let prevStats = {current:0,longest:0,total:0};
 
-let publicMode = false;
-
-if (publicUser && publicStreak) {
-  // Public view mode
-  console.log("Public mode");
-  publicMode = true;
-  document.getElementById("loginForm").style.display = "none";
-  document.getElementById("logoutBtn").style.display = "none";
-  document.getElementById("clearBtn").style.display = "none";
-  document.getElementById("todayBtn").style.display = "none";
-  document.getElementById("publicToggle").disabled = true;
-  document.getElementById("shareLinkBtn").style.display = "none";
-
-  loadPublicStreak(publicUser, publicStreak);
-}
-
 async function loadPublicStreak(uid, streakName) {
   const streakDocRef = doc(db, "users", uid, "streaks", streakName);
   const streakSnap = await getDoc(streakDocRef);
@@ -182,7 +166,6 @@ async function loadPublicStreak(uid, streakName) {
   const today = new Date();
   setView(today.getFullYear(), today.getMonth());
 }
-
 
     function uidDate(d){
       const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); const day=d.getDate().toString().padStart(2,'0');
@@ -353,6 +336,25 @@ await loadStreakList();
 await loadStreak(currentStreakName);
       } else {
         userId=null;
+
+let publicMode = false;
+
+if (publicUser && publicStreak) {
+  // Public view mode
+  console.log("Public mode");
+  publicMode = true;
+  document.getElementById("loginForm").style.display = "none";
+  document.getElementById("logoutBtn").style.display = "none";
+  document.getElementById("clearBtn").style.display = "none";
+  document.getElementById("todayBtn").style.display = "none";
+  document.getElementById("publicToggle").disabled = true;
+  document.getElementById("shareLinkBtn").style.display = "none";
+
+  loadPublicStreak(publicUser, publicStreak);
+}
+
+
+
         document.getElementById('loginForm').style.display=loginFormDisplay;
         document.getElementById('logoutBtn').style.display='none';
         document.getElementById('email').focus();
