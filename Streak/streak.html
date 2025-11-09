@@ -324,10 +324,13 @@ async function loadPublicStreak(uid, streakName) {
       }
     });
 
+    let publicMode = false;
+
     onAuthStateChanged(auth, async (user)=>{
 const loginFormDisplay = document.getElementById('loginForm').style.display;
       if(user){
         userId=user.uid;
+        if(publicUser && publicStreak && publicUser != userId) publicMode = true;
         document.getElementById('loginForm').style.display='none';
         document.getElementById('logoutBtn').style.display='inline-block';
         const t=new Date();
@@ -337,7 +340,7 @@ await loadStreak(currentStreakName);
       } else {
         userId=null;
 
-let publicMode = false;
+ publicMode = false;
 
 if (publicUser && publicStreak) {
   // Public view mode
