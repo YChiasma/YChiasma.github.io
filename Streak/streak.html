@@ -327,6 +327,7 @@ async function loadPublicStreak(uid, streakName) {
     let publicMode = false;
 
     onAuthStateChanged(auth, async (user)=>{
+      if(publicStreak) currentStreakName = publicStreak;
 const loginFormDisplay = document.getElementById('loginForm').style.display;
       if(user){
         userId=user.uid;
