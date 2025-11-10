@@ -394,7 +394,7 @@ async function loadStreakList() {
     opt.value = "default";
     opt.textContent = "default";
     select.appendChild(opt);
-    currentStreakName = "default";
+    if(!currentStreakName) currentStreakName = "default";
     return;
   }
 
@@ -407,9 +407,11 @@ async function loadStreakList() {
     select.appendChild(opt);
   });
 
-  // pick first streak as active
-  currentStreakName = select.options[0].value;
-  select.value = currentStreakName;
+  if(!currentStreakName) {
+    // pick first streak as active
+    currentStreakName = select.options[0].value;
+    select.value = currentStreakName;
+  }
 }
 
 document.getElementById("newStreakBtn").addEventListener("click", async () => {
