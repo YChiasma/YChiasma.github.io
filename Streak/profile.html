@@ -80,7 +80,7 @@ async function getStreakInfo(db, uid, streakName) {
   let streakLength = 0;
   let status = "broken";
 
-  console.log({doneDays: doneDays, todayStr: todayStr});
+  console.log({streakName: streakName, doneDays: doneDays, todayStr: todayStr});
   if (doneDays.has(todayStr)) status = "done";
   else {
     const lastDone = days.length ? new Date(days[days.length - 1]) : null;
@@ -90,6 +90,8 @@ async function getStreakInfo(db, uid, streakName) {
       else status = "broken";
     } else status = "not started";
   }
+
+  console.log(status);
 
   let count = 0;
   let cursor = new Date(today);
