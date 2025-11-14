@@ -69,8 +69,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
 // Helper to calculate streak stats
 async function getStreakInfo(db, uid, streakName) {
   const daysCol = collection(db, "users", uid, "streaks", streakName, "days");
-  const q = query(daysCol, orderBy("date", "desc"));
+  const q = query(daysCol, orderBy("ts", "desc"));
   const snap = await getDocs(q);
+  console.log(snap);
 
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
@@ -136,7 +137,7 @@ function makeStatusButton(status) {
 async function markDoneToday(db, uid, streakName, card) {
   const today = new Date().toISOString().slice(0, 10);
   const dayRef = doc(db, "users", uid, "streaks", streakName, "days", today);
-  await setDoc(dayRef, { done: true, date: today });
+  await setDoc(dayRef, { done: true, date: today, ts: Date.now() });
   // Refresh UI
   const info = await getStreakInfo(db, uid, streakName);
   updateCardStatus(card, info);
@@ -207,7 +208,7 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   viewBtn.className = "btn view";
   viewBtn.style.marginLeft = "8px";
   viewBtn.onclick = () => {
-    const url = `streak?user=${uid}&streak=${encodeURIComponent(name)}`;
+    const url = `streak.html?user=${uid}&streak=${encodeURIComponent(name)}`;
     window.location.href = url;
   };
   right.appendChild(viewBtn);

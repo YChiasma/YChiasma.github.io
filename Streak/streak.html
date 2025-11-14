@@ -182,6 +182,9 @@ async function loadPublicStreak(uid, streakName) {
     }
 
     function streakRef(dateStr) {
+      if(!userId) userId = publicUser;
+      if(!currentStreakName) currentStreakName = publicStreak;
+      console.log({db, userId, currentStreakName, dateStr});
       return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
     }
 
