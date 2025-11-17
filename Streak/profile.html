@@ -93,8 +93,10 @@ async function getStreakInfo(db, uid, streakName) {
   if (doneDays.has(todayStr)) status = "done";
   else {
     const lastDone = days.length ? new Date(days[days.length - 1]) : null;
+    console.log({lastDone: lastDone});
     if (lastDone) {
       const diffDays = Math.floor((today - lastDone) / (1000 * 60 * 60 * 24));
+      console.log({diffDays: diffDays});
       if (diffDays === 1) status = "undone";
       else status = "broken";
     } else status = "not started";
