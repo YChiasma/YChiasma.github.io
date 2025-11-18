@@ -81,8 +81,8 @@ async function getStreakInfo(db, uid, streakName) {
   const snap = await getDocs(q);
   console.log(snap);
 
-  const today = new Date();
-  const todayStr = formatDateToYYYYMMDD(today);
+  const todayStr = formatDateToYYYYMMDD(new Date());
+  const today = new Date(todayStr);
   const days = snap.docs.map(d => d.id).sort();
   const doneDays = new Set(days);
 
