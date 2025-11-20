@@ -71,7 +71,10 @@
       </div>
     </header>
 
+    <div style="display:flex; gap:8px; align-items:center">
+      <input type="text" id="streakName" name="streakName" value="">
       <button class="btn" id="renameBtn">Rename</button>
+    </div>
     <div style="display:flex; gap:8px; align-items:center">
       <select id="streakSelect" class="btn">
         <option value="default">Default</option>
@@ -373,6 +376,7 @@ if (publicUser && publicStreak) {
 
     document.getElementById('streakSelect').addEventListener('change', async e => {
       currentStreakName = e.target.value;
+      document.getElementById("streakName").value = currentStreakName;
       cache = {};
       const t = new Date();
       setView(t.getFullYear(), t.getMonth());
