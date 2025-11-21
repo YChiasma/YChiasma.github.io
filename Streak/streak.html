@@ -187,7 +187,7 @@ async function loadPublicStreak(uid, streakName) {
 
     function streakRef(dateStr) {
       if(!userId) userId = publicUser;
-      if(!currentStreakName) currentStreakName = publicStreak;
+      if(!currentStreakName) setCurrentStreakName(publicStreak);
       console.log({db, userId, currentStreakName, dateStr});
       return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
     }
@@ -334,7 +334,7 @@ async function loadPublicStreak(uid, streakName) {
     let publicMode = false;
 
     onAuthStateChanged(auth, async (user)=>{
-      if(publicStreak) currentStreakName = publicStreak;
+      if(publicStreak) setCurrentStreakName(publicStreak);
 const loginFormDisplay = document.getElementById('loginForm').style.display;
       if(user){
         userId=user.uid;
@@ -374,9 +374,13 @@ if (publicUser && publicStreak) {
 
     let currentStreakName = "default"; // or "Running", "Meditation", etc.
 
-    document.getElementById('streakSelect').addEventListener('change', async e => {
-      currentStreakName = e.target.value;
+    function setCurrentStreakName(newStreakName) {
+      currentStreakName = newStreakName;
       document.getElementById("streakName").value = currentStreakName;
+    }
+
+    document.getElementById('streakSelect').addEventListener('change', async e => {
+      setCurrentStreakName(e.target.value);
       cache = {};
       const t = new Date();
       setView(t.getFullYear(), t.getMonth());
@@ -402,7 +406,7 @@ async function loadStreakList() {
     opt.value = "default";
     opt.textContent = "default";
     select.appendChild(opt);
-    if(!currentStreakName) currentStreakName = "default";
+    if(!currentStreakName) setCurrentStreakName("default");
     return;
   }
 
@@ -417,7 +421,7 @@ async function loadStreakList() {
 
   if(!currentStreakName) {
     // pick first streak as active
-    currentStreakName = select.options[0].value;
+    setCurrentStreakName(select.options[0].value);
     select.value = currentStreakName;
   }
 }
@@ -437,7 +441,7 @@ document.getElementById("newStreakBtn").addEventListener("click", async () => {
 
   // select new streak
   document.getElementById("streakSelect").value = safeName;
-  currentStreakName = safeName;
+  setCurrentStreakName(safeName);
   cache = {};
   const t = new Date();
   setView(t.getFullYear(), t.getMonth());
@@ -490,7 +494,7 @@ async function syncPublicCheckbox(streakName) {
 async function loadStreak(streakName) {
   if (!userId) return;
 
-  currentStreakName = streakName;
+  setCurrentStreakName(streakName);
   cache = {};
 
   // 🔹 Sync public toggle
