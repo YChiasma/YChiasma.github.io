@@ -451,6 +451,17 @@ await loadStreakList();
 const t = new Date();
 setView(t.getFullYear(), t.getMonth());
 
+document.getElementById("renameBtn").addEventListener("click", e => {
+  const newStreakName = document.getElementById("renameInput").value;
+  const streakDoc = doc(db, "users", userId, "streaks", currentStreakName);
+  getDoc(streakDoc).then(doc => {
+    const newStreakDoc = doc(db, "users", userId, "streaks", newStreakName);
+    setDoc(newStreakDoc, doc.data()).then(() => {
+      doc.delete();
+    });
+  });
+});
+
 async function togglePublic(streakName, value) {
   const streakDoc = doc(db, "users", userId, "streaks", streakName);
   await setDoc(streakDoc, { public: value }, { merge: true });
