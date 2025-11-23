@@ -452,7 +452,7 @@ const t = new Date();
 setView(t.getFullYear(), t.getMonth());
 
 document.getElementById("renameBtn").addEventListener("click", e => {
-  const newStreakName = document.getElementById("renameInput").value;
+  const newStreakName = document.getElementById("streakName").value;
   const streakDoc = doc(db, "users", userId, "streaks", currentStreakName);
   getDoc(streakDoc).then(doc => {
     const newStreakDoc = doc(db, "users", userId, "streaks", newStreakName);
