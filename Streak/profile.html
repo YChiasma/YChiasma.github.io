@@ -237,7 +237,7 @@ async function loadProfile(uid, isOwner) {
     const data = streakDoc.data();
     if (isOwner || data.public) {
       if (!data.displayName) {
-        updateDoc(streakRef, { displayName: streakDoc.id });
+        updateDoc(streakDoc, { displayName: streakDoc.id });
       }
       const info = await getStreakInfo(db, uid, streakDoc.id);
       renderStreakCard(db, uid, streakDoc.id, info, !!data.public, isOwner);
