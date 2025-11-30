@@ -135,7 +135,7 @@ const publicUser = urlParams.get("user");
 const publicStreak = urlParams.get("streak");
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -412,7 +412,7 @@ async function loadStreakList() {
 
   snaps.forEach(docSnap => {
 
-    const name = docSnap.id;
+    const name = docSnap.displayName;
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
