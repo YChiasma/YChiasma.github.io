@@ -412,7 +412,8 @@ async function loadStreakList() {
 
   snaps.forEach(docSnap => {
 
-    const name = docSnap.displayName;
+    console.log([docSnap.data().displayName, docSnap.id]);
+    const name = docSnap.data().displayName || docSnap.id;
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
