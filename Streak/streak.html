@@ -456,14 +456,7 @@ document.getElementById("renameBtn").addEventListener("click", e => {
   const newStreakName = document.getElementById("streakName").value;
   const streakDoc = doc(db, "users", userId, "streaks", currentStreakName);
   updateDoc(streakDoc, { displayName: newStreakName });
-  /*
-  getDoc(streakDoc).then(sd => {
-    const newStreakDoc = doc(db, "users", userId, "streaks", newStreakName);
-    setDoc(newStreakDoc, sd.data()).then(() => {
-      sd.delete();
-    });
-  });
-  */
+  loadStreakList();
 });
 
 async function togglePublic(streakName, value) {
