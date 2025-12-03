@@ -240,7 +240,7 @@ async function loadProfile(uid, isOwner) {
         updateDoc(streakDoc.ref, { displayName: streakDoc.id });
       }
       const info = await getStreakInfo(db, uid, streakDoc.id);
-      renderStreakCard(db, uid, streakDoc.id, info, !!data.public, isOwner);
+      renderStreakCard(db, uid, data.displayName || streakDoc.id, info, !!data.public, isOwner);
     }
   }
 
