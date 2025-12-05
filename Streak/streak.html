@@ -134,6 +134,8 @@ const urlParams = new URLSearchParams(window.location.search);
 const publicUser = urlParams.get("user");
 const publicStreak = urlParams.get("streak");
 
+let currentStreakName = "default"; // or "Running", "Meditation", etc.
+
 if(publicStreak) setCurrentStreakName(publicStreak);
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -373,8 +375,6 @@ if (publicUser && publicStreak) {
         document.getElementById('email').focus();
       }
     });
-
-    let currentStreakName = "default"; // or "Running", "Meditation", etc.
 
     function setCurrentStreakName(newStreakName) {
       currentStreakName = newStreakName;
