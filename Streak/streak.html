@@ -425,8 +425,8 @@ async function loadStreakList() {
   if(!currentStreakName) {
     // pick first streak as active
     setCurrentStreakName(select.options[0].value);
-    select.value = currentStreakName;
   }
+  select.value = currentStreakName;
 }
 
 document.getElementById("newStreakBtn").addEventListener("click", async () => {
