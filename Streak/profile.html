@@ -46,6 +46,11 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    async function getUserInfo() {
+      const streakDocRef = doc(db, "users", userId);
+      const streakSnap = await getDoc(streakDocRef);
+    }
+
     // Ensure user stays logged in across tabs/pages
     await setPersistence(auth, browserLocalPersistence);
 
