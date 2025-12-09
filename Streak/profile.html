@@ -34,7 +34,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, getDoc, getDocs, query, orderBy, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -47,9 +47,16 @@
     const auth = getAuth(app);
 
     async function getUserInfo() {
-      const streakDocRef = doc(db, "users", userId);
-      const streakSnap = await getDoc(streakDocRef);
+      const userDocRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userDocRef);
+      console.log(userSnap);
+      if(userSnap.exists()) {
+        const data = userSnap.data();
+        console.log(data);
+      }
     }
+
+    getUserInfo();
 
     // Ensure user stays logged in across tabs/pages
     await setPersistence(auth, browserLocalPersistence);
