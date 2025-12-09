@@ -46,7 +46,7 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    async function getUserInfo() {
+    async function getUserInfo(userId) {
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
       console.log(userSnap);
@@ -55,8 +55,6 @@
         console.log(data);
       }
     }
-
-    getUserInfo();
 
     // Ensure user stays logged in across tabs/pages
     await setPersistence(auth, browserLocalPersistence);
@@ -242,6 +240,8 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   return card;
 }
 async function loadProfile(uid, isOwner) {
+  getUserInfo(uid);
+  
   const streaksCol = collection(db, "users", uid, "streaks");
   const streaksSnap = await getDocs(streaksCol);
   listEl.innerHTML = "";
