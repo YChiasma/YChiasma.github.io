@@ -54,6 +54,7 @@
         const data = userSnap.data();
         console.log(data);
       }
+      if(data.displayName) document.getElementById("userDisplayName").text = data.displayName;
     }
 
     // Ensure user stays logged in across tabs/pages
