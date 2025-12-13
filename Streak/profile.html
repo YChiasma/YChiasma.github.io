@@ -53,7 +53,7 @@
       if(userSnap.exists()) {
         const data = userSnap.data();
         console.log(data);
-        if(data.displayName) document.getElementById("userDisplayName").text = data.displayName;
+        if(data.displayName) document.getElementById("userDisplayName").textContent = data.displayName;
       }
     }
 
