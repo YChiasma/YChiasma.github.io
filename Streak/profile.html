@@ -280,7 +280,7 @@ async function loadProfile(uid, isOwner) {
       document.getElementById("profileTitle").textContent = isOwner ? "My Profile" : "User Profile";
     });
 
-document.getElementById("renameButton").addEventListener("click", () => {
+document.getElementById("changeName").addEventListener("click", () => {
   const textField = document.createElement("input");
   const userDisplayName = document.getElementById("userDisplayName");
   textField.value = userDisplayName.textContent;
