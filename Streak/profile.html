@@ -286,6 +286,7 @@ document.getElementById("changeName").addEventListener("click", () => {
   textField.value = userDisplayName.textContent;
   userDisplayName.textContent = "";
   userDisplayName.appendChild(textField);
+  textField.select();
 });
   </script>
 </body>
