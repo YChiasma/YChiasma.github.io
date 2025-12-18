@@ -46,6 +46,8 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    let displayName = undefined;
+    
     async function getUserInfo(userId) {
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
@@ -53,7 +55,10 @@
       if(userSnap.exists()) {
         const data = userSnap.data();
         console.log(data);
-        if(data.displayName) document.getElementById("userDisplayName").textContent = data.displayName;
+        if(data.displayName) {
+          displayName = data.displayName;
+          document.getElementById("userDisplayName").textContent = displayName;
+        }
       }
     }
 
@@ -282,8 +287,8 @@ async function loadProfile(uid, isOwner) {
 
 document.getElementById("changeName").addEventListener("click", () => {
   const textField = document.createElement("input");
+  textField.value = displayName;
   const userDisplayName = document.getElementById("userDisplayName");
-  textField.value = userDisplayName.textContent;
   userDisplayName.textContent = "";
   userDisplayName.appendChild(textField);
   textField.select();
