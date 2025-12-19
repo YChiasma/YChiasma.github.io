@@ -292,6 +292,14 @@ document.getElementById("changeName").addEventListener("click", () => {
   userDisplayName.textContent = "";
   userDisplayName.appendChild(textField);
   textField.select();
+  textField.addEventListener("keyup", (e) => {
+    if("Enter" == e.key) {
+      // TODO: update firebase
+      displayName = textField.value;
+      userDisplayName.innerHTML ="";
+      userDisplayName.textContent = displayName;
+    }
+  });
 });
   </script>
 </body>
