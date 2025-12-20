@@ -299,6 +299,10 @@ const changeNameButton = document.getElementById("changeName")
 const saveNameButton = document.getElementById("saveName")
 
 changeNameButton.addEventListener("click", () => {
+  setDisplayName(textField.value)
+});
+
+changeNameButton.addEventListener("click", () => {
   const textField = document.createElement("input");
   textField.value = displayName;
   const userDisplayName = document.getElementById("userDisplayName");
