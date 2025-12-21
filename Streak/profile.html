@@ -295,15 +295,16 @@ function setDisplayName(newName) {
   // TODO: update firebase
 }
 
-const changeNameButton = document.getElementById("changeName")
-const saveNameButton = document.getElementById("saveName")
+const changeNameButton = document.getElementById("changeName");
+const saveNameButton = document.getElementById("saveName");
+let textField = null;
 
 changeNameButton.addEventListener("click", () => {
-  setDisplayName(textField.value)
+  setDisplayName(textField.value);
 });
 
 changeNameButton.addEventListener("click", () => {
-  const textField = document.createElement("input");
+  textField = document.createElement("input");
   textField.value = displayName;
   const userDisplayName = document.getElementById("userDisplayName");
   userDisplayName.textContent = "";
