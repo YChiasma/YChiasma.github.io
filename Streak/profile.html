@@ -292,7 +292,8 @@ function setDisplayName(newName) {
   userDisplayName.textContent = displayName;
   changeNameButton.style.display = "";
   saveNameButton.style.display = "none";
-  // TODO: update firebase
+  const userRef = doc(db, "users", uid);
+  await setDoc(userRef, { displayName: displayName });
 }
 
 const changeNameButton = document.getElementById("changeName");
