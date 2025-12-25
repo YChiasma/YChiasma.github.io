@@ -293,7 +293,7 @@ function setDisplayName(newName) {
   changeNameButton.style.display = "";
   saveNameButton.style.display = "none";
   const userRef = doc(db, "users", uid);
-  await setDoc(userRef, { displayName: displayName });
+  setDoc(userRef, { displayName: displayName });
 }
 
 const changeNameButton = document.getElementById("changeName");
