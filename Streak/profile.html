@@ -49,6 +49,7 @@
     let displayName = undefined;
     
     async function getUserInfo(userId) {
+      // TODO: change Firebase rules so displayName can be gotten by all
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
       console.log(userSnap);
