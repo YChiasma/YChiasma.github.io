@@ -52,10 +52,8 @@
       // TODO: test rules
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
-      console.log(userSnap);
       if(userSnap.exists()) {
         const data = userSnap.data();
-        console.log(data);
         if(data.displayName) {
           displayName = data.displayName;
           document.getElementById("userDisplayName").textContent = displayName;
@@ -97,7 +95,6 @@ async function getStreakInfo(db, uid, streakName) {
   const daysCol = collection(db, "users", uid, "streaks", streakName, "days");
   const q = query(daysCol, orderBy("ts", "desc"));
   const snap = await getDocs(q);
-  console.log(snap);
 
   const todayStr = formatDateToYYYYMMDD(new Date());
   const today = new Date(todayStr);
@@ -107,20 +104,15 @@ async function getStreakInfo(db, uid, streakName) {
   let streakLength = 0;
   let status = "broken";
 
-  console.log({streakName: streakName, doneDays: doneDays, todayStr: todayStr, days: days, lastDone: days.length ? new Date(days[days.length - 1]) : null});
   if (doneDays.has(todayStr)) status = "done";
   else {
     const lastDone = days.length ? new Date(days[days.length - 1]) : null;
-    console.log({lastDone: lastDone});
     if (lastDone) {
       const diffDays = Math.floor((today - lastDone) / (1000 * 60 * 60 * 24));
-      console.log({diffDays: diffDays});
       if (diffDays === 1) status = "undone";
       else status = "broken";
     } else status = "not started";
   }
-
-  console.log(status);
 
   let count = 0;
   let cursor = new Date(today);
