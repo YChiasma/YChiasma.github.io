@@ -49,7 +49,7 @@
     let displayName = undefined;
     
     async function getUserInfo(userId) {
-      // TODO: change Firebase rules so displayName can be gotten by all
+      // TODO: test rules
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
       console.log(userSnap);
@@ -250,7 +250,7 @@ async function loadProfile(uid, isOwner) {
   getUserInfo(uid);
   
   const streaksCol = collection(db, "users", uid, "streaks");
-  const streaksSnap = await getDocs(streaksCol);
+  const streaksSnap = await getDocs(streaksCol).catch(error => console.log(error));
   listEl.innerHTML = "";
 
   for (const streakDoc of streaksSnap.docs) {
