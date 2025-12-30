@@ -241,8 +241,17 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
 async function loadProfile(uid, isOwner) {
   getUserInfo(uid);
   
-  const streaksCol = collection(db, "users", uid, "streaks");
-  const streaksSnap = await getDocs(streaksCol).catch(error => console.log(error));
+  let streaksSnap = null;
+  if(isOwner) {
+    const streaksCol = collection(db, "users", uid, "streaks");
+    streaksSnap = await getDocs(streaksCol);
+  } else {
+    const publicStreaksQuery = query(
+      streaksCol,
+      where("public", "==", true)
+    );
+    streaksSnap = await getDocs(publicStreaksQuery);
+  }
   listEl.innerHTML = "";
 
   for (const streakDoc of streaksSnap.docs) {
