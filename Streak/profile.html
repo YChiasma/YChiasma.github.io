@@ -241,9 +241,13 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
 async function loadProfile(uid, isOwner) {
   getUserInfo(uid);
   
+  if(!isOwner) {
+    changeNameButton.style.display = "none";
+  }
+  
+  const streaksCol = collection(db, "users", uid, "streaks");
   let streaksSnap = null;
   if(isOwner) {
-    const streaksCol = collection(db, "users", uid, "streaks");
     streaksSnap = await getDocs(streaksCol);
   } else {
     const publicStreaksQuery = query(
