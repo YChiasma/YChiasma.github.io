@@ -60,7 +60,6 @@ async function loadPublicStreak(uid, streakName) {
     function streakRef(dateStr) {
       if(!userId) userId = publicUser;
       if(!currentStreakName) setCurrentStreakName(publicStreak);
-      console.log({db, userId, currentStreakName, dateStr});
       return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
     }
 
@@ -224,7 +223,6 @@ await loadStreak(currentStreakName);
 
 if (publicUser && publicStreak) {
   // Public view mode
-  console.log("Public mode");
   publicMode = true;
   document.getElementById("loginForm").style.display = "none";
   document.getElementById("logoutBtn").style.display = "none";
@@ -282,7 +280,7 @@ async function loadStreakList() {
 
   snaps.forEach(docSnap => {
 
-    console.log([docSnap.data().displayName, docSnap.id]);
+
     const name = docSnap.data().displayName || docSnap.id;
     const opt = document.createElement("option");
     opt.value = name;
