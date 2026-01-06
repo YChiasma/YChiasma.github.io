@@ -47,6 +47,95 @@
     .fadeInUp{animation:fadeInUp .3s ease forwards}
     @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
     .pulse{animation:pulse .4s ease}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 720px) {
+  body {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .app {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .calendar-wrap {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+  }
+
+  .panel {
+    margin-top: 12px;
+  }
+
+  /* Calendar grid scaling */
+  :root {
+    --cell-size: 40px;
+  }
+
+  .grid {
+    justify-content: center;
+  }
+
+  .month-card {
+    max-width: 100%;
+  }
+
+  .day {
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .day .n {
+    font-size: 13px;
+  }
+
+  /* Bigger tap targets */
+  .btn {
+    padding: 10px 12px;
+  }
+
+  /* Login form stacking */
+  #loginForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #loginForm input {
+    width: 100%;
+  }
+
+  /* Stats layout */
+  #statsPanel > div:first-child {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .stat {
+    font-size: 24px;
+  }
+
+  .footer {
+    margin-top: 16px;
+  }
+}
+
   </style>
 </head>
 <body>
