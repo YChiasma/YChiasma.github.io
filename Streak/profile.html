@@ -149,7 +149,7 @@ function makeStatusButton(status) {
   btn.style.color = status === "undone" ? "#000" : "#fff";
   btn.textContent =
     status === "done" ? "Done today" :
-    status === "undone" ? "Mark done" :
+    status === "undone" ? "Mark done" : // TODO: Fix bug where mark done marks the next day if GMT is in the next
     "Restart";
 
   return btn;
