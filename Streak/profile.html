@@ -49,7 +49,6 @@
     let displayName = undefined;
     
     async function getUserInfo(userId) {
-      // TODO: test rules
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
       if(userSnap.exists()) {
@@ -149,13 +148,13 @@ function makeStatusButton(status) {
   btn.style.color = status === "undone" ? "#000" : "#fff";
   btn.textContent =
     status === "done" ? "Done today" :
-    status === "undone" ? "Mark done" : // TODO: Fix bug where mark done marks the next day if GMT is in the next
+    status === "undone" ? "Mark done" :
     "Restart";
 
   return btn;
 }
-async function markDoneToday(db, uid, streakName, card) {
-  const today = new Date().toISOString().slice(0, 10);
+async function markDoneToday(db, uid, streakName, card) { // TODO: See line 98 for below TODO:
+  const today = new Date().toISOString().slice(0, 10); // TODO: Fix bug where mark done marks the next day if GMT is in the next
   const dayRef = doc(db, "users", uid, "streaks", streakName, "days", today);
   await setDoc(dayRef, { done: true, date: today, ts: Date.now() });
   // Refresh UI
