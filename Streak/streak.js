@@ -115,6 +115,14 @@ async function loadPublicStreak(uid, streakName) {
       updateStats();
       document.getElementById('loadingOverlay').style.display='none';
       highlightToday();
+
+      if (
+        date.getFullYear() === new Date().getFullYear() &&
+        date.getMonth() === new Date().getMonth() &&
+        d === new Date().getDate()
+      ) {
+        el.dataset.today = "true";
+      }
     }
 
     function updateStats(){
@@ -397,6 +405,26 @@ if (checkbox.checked) {
 
 document.getElementById('streakSelect').addEventListener('change', e => {
   loadStreak(e.target.value);
+});
+
+// left/right swipe
+
+let startX = null;
+
+document.querySelector(".month-card").addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+document.querySelector(".month-card").addEventListener("touchend", e => {
+  if (startX === null) return;
+  const diff = e.changedTouches[0].clientX - startX;
+
+  if (Math.abs(diff) > 50) {
+    diff > 0
+      ? document.getElementById("prevMonth").click()
+      : document.getElementById("nextMonth").click();
+  }
+  startX = null;
 });
 
 

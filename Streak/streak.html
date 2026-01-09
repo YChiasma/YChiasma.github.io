@@ -136,6 +136,20 @@
   }
 }
 
+@media (max-width: 720px) {
+  .btn.nav {
+    padding: 10px 14px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .day[data-today="true"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -184,9 +198,9 @@
         <div class="loading-overlay" id="loadingOverlay" style="display:none"><div class="spinner"></div></div>
         <div class="month-header">
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn" id="prevMonth">◀</button>
+            <button class="btn nav" id="prevMonth">◀</button>
             <div class="month-title" id="monthTitle">Month</div>
-            <button class="btn" id="nextMonth">▶</button>
+            <button class="btn nav" id="nextMonth">▶</button>
           </div>
           <div class="muted" id="rangeLabel">Showing</div>
         </div>
