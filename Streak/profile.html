@@ -153,8 +153,8 @@ function makeStatusButton(status) {
 
   return btn;
 }
-async function markDoneToday(db, uid, streakName, card) { // TODO: See line 98 for below TODO:
-  const today = new Date().toISOString().slice(0, 10); // TODO: Fix bug where mark done marks the next day if GMT is in the next
+async function markDoneToday(db, uid, streakName, card) {
+  const today = formatDateToYYYYMMDD(new Date());
   const dayRef = doc(db, "users", uid, "streaks", streakName, "days", today);
   await setDoc(dayRef, { done: true, date: today, ts: Date.now() });
   // Refresh UI
