@@ -50,7 +50,14 @@ async function loadPublicStreak(uid, streakName) {
 
     let viewYear, viewMonth;
 
-    function setView(y,m){ viewYear=y; viewMonth=m; loadMonthRange(y,m); }
+    function setView(y,m){ viewYear=y; viewMonth=m; loadMonthRange(y,m);
+const isToday =
+  viewYear === new Date().getFullYear() &&
+  viewMonth === new Date().getMonth();
+
+const sticky = document.getElementById('stickyToday');
+if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
+ }
 
     function getMonthInfo(y,m){
       const first=new Date(y,m,1); const last=new Date(y,m+1,0);
@@ -426,5 +433,11 @@ document.querySelector(".month-card").addEventListener("touchend", e => {
   }
   startX = null;
 });
+
+
+document.getElementById('stickyToday')
+  .addEventListener('click', () => {
+    document.getElementById('todayBtn').click();
+  });
 
 
