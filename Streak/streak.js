@@ -113,7 +113,19 @@ if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
         const date=new Date(viewYear,viewMonth,d); const id=uidDate(date);
         const el=document.createElement('button'); el.className='day'; el.innerHTML=`<div class="n">${d}</div>`;
         if(cache[id]) el.setAttribute('data-state','done');
-        el.addEventListener('click',()=>toggleDay(id));
+        el.addEventListener('click', async () => {
+  const done = !!cache[id];
+
+  if (window.innerWidth <= 720) {
+    openSheet({
+      streakName: currentStreakDisplayName || currentStreakName,
+      dateStr: id,
+      done
+    });
+  } else {
+    toggleDay(id);
+  }
+});
         daysGrid.appendChild(el);
       }
       daysGrid.classList.remove('fadeInUp');
@@ -439,5 +451,60 @@ document.getElementById('stickyToday')
   .addEventListener('click', () => {
     document.getElementById('todayBtn').click();
   });
+
+
+const sheet = document.getElementById('bottomSheet');
+const sheetBackdrop = document.getElementById('sheetBackdrop');
+const sheetTitle = document.getElementById('sheetTitle');
+const sheetDate = document.getElementById('sheetDate');
+const sheetStatus = document.getElementById('sheetStatus');
+const sheetAction = document.getElementById('sheetAction');
+
+let sheetContext = null;
+
+function openSheet({ streakName, dateStr, done }) {
+  sheetContext = { streakName, dateStr, done };
+
+  sheetTitle.textContent = streakName;
+  sheetDate.textContent = new Date(dateStr).toDateString();
+
+  sheetStatus.textContent = done ? 'Completed' : 'Not completed';
+  sheetStatus.style.color = done ? '#10b981' : '#facc15';
+
+  sheetAction.textContent = done ? 'Undo' : 'Mark done';
+
+  sheetBackdrop.style.display = 'block';
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+
+function closeSheet() {
+  sheet.classList.remove('open');
+  sheetBackdrop.style.display = 'none';
+  sheetContext = null;
+}
+
+sheetBackdrop.addEventListener('click', closeSheet);
+
+sheetAction.addEventListener('click', async () => {
+  if (!sheetContext) return;
+
+  const { dateStr, done } = sheetContext;
+
+  if (done) {
+    await deleteDoc(streakRef(dateStr));
+    cache[dateStr] = false;
+  } else {
+    await setDoc(streakRef(dateStr), {
+      done: true,
+      ts: Date.now()
+    });
+    cache[dateStr] = true;
+  }
+
+  closeSheet();
+  render();
+});
+
+
 
 
