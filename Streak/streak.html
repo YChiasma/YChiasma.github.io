@@ -230,6 +230,59 @@
   }
 }
 
+/* Summary pill */
+.summary-pill {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.summary-pill.done {
+  background: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+}
+
+.summary-pill.undone {
+  background: rgba(250, 204, 21, 0.15);
+  color: #fde047;
+}
+
+.summary-pill.broken {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.summary-pill:active {
+  transform: scale(0.97);
+}
+
+/* Mobile only */
+@media (min-width: 721px) {
+  .summary-pill {
+    display: none !important;
+  }
+}
+
+@keyframes pillPulse {
+  0% { box-shadow: 0 0 0 0 rgba(250,204,21,0.4); }
+  100% { box-shadow: 0 0 0 12px rgba(250,204,21,0); }
+}
+
+.summary-pill.undone {
+  animation: pillPulse 1.5s infinite;
+}
+
 
   </style>
 </head>
@@ -285,6 +338,7 @@
           </div>
           <div class="muted" id="rangeLabel">Showing</div>
         </div>
+        <div id="summaryPill" class="summary-pill" style="display:none"></div>
         <div class="grid" style="margin-bottom:6px">
           <div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div>
         </div>
