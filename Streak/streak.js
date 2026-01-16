@@ -127,6 +127,13 @@ if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
   }
 });
         daysGrid.appendChild(el);
+      if (
+        date.getFullYear() === new Date().getFullYear() &&
+        date.getMonth() === new Date().getMonth() &&
+        d === new Date().getDate()
+      ) {
+        el.dataset.today = "true";
+      }
       }
       daysGrid.classList.remove('fadeInUp');
       void daysGrid.offsetWidth;
@@ -135,13 +142,7 @@ if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
       document.getElementById('loadingOverlay').style.display='none';
       highlightToday();
 
-      if (
-        date.getFullYear() === new Date().getFullYear() &&
-        date.getMonth() === new Date().getMonth() &&
-        d === new Date().getDate()
-      ) {
-        el.dataset.today = "true";
-      }
+
     }
 
     function updateStats(){
