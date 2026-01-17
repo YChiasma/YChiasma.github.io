@@ -142,6 +142,7 @@ if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
       document.getElementById('loadingOverlay').style.display='none';
       highlightToday();
 
+      renderSummaryPill();
 
     }
 
@@ -509,5 +510,62 @@ sheetAction.addEventListener('click', async () => {
 
 
 
+function getTodayStatusInfo() {
+  const today = new Date();
+  const todayStr = uidDate(today);
 
-// TODO: Add summary pill JS
+  if (cache[todayStr]) {
+    return {
+      status: "done",
+      text: "🔥 Streak active · Done today"
+    };
+  }
+
+  // Find last done day
+  const doneDays = Object.keys(cache)
+    .filter(k => cache[k])
+    .sort();
+
+  if (!doneDays.length) {
+    return {
+      status: "undone",
+      text: "⏳ Not done today"
+    };
+  }
+
+  const last = new Date(doneDays[doneDays.length - 1]);
+  const diff = Math.floor((today - last) / (1000 * 60 * 60 * 24));
+
+  if (diff === 1) {
+    return {
+      status: "undone",
+      text: "⏳ Not done today"
+    };
+  }
+
+  return {
+    status: "broken",
+    text: `💔 Streak broken · ${diff} days ago`
+  };
+}
+
+function renderSummaryPill() {
+  const pill = document.getElementById("summaryPill");
+  if (!pill || window.innerWidth > 720) return;
+
+  const info = getTodayStatusInfo();
+
+  pill.className = `summary-pill ${info.status}`;
+  pill.textContent = info.text;
+  pill.style.display = "flex";
+
+  pill.onclick = () => {
+    const todayStr = uidDate(new Date());
+    openSheet({
+      streakName: currentStreakDisplayName || currentStreakName,
+      dateStr: todayStr,
+      done: !!cache[todayStr]
+    });
+  };
+}
+
