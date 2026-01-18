@@ -569,3 +569,14 @@ function renderSummaryPill() {
   };
 }
 
+async function isFollowing(ownerUid, streakId) {
+  const q = query(
+    collection(db, "users", auth.currentUser.uid, "following"),
+    where("ownerUid", "==", ownerUid),
+    where("streakId", "==", streakId)
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+
