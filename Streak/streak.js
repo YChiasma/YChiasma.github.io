@@ -579,4 +579,15 @@ async function isFollowing(ownerUid, streakId) {
   return !snap.empty;
 }
 
+async function followStreak(ownerUid, streakId, displayName) {
+  await addDoc(
+    collection(db, "users", auth.currentUser.uid, "following"),
+    {
+      ownerUid,
+      streakId,
+      displayName,
+      followedAt: Date.now()
+    }
+  );
+}
 
