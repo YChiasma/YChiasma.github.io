@@ -232,6 +232,30 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   };
   right.appendChild(viewBtn);
 
+if (!isOwner && isPublic && auth.currentUser) {
+  const followBtn = document.createElement("button");
+  followBtn.className = "btn";
+  followBtn.textContent = "Follow";
+
+  isFollowing(profileUid, streakId).then(followed => {
+    followBtn.textContent = followed ? "Following" : "Follow";
+  });
+
+  followBtn.onclick = async () => {
+    const followed = await isFollowing(profileUid, streakId);
+    if (followed) {
+      await unfollowStreak(profileUid, streakId);
+      followBtn.textContent = "Follow";
+    } else {
+      await followStreak(profileUid, streakId, displayName);
+      followBtn.textContent = "Following";
+    }
+  };
+
+  right.appendChild(followBtn);
+}
+
+
   card.appendChild(left);
   card.appendChild(right);
   listEl.appendChild(card);
