@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Shared Log</h1>
+  <h1 id="h1">Shared Log</h1>
   <p id="shareLink"></p>
 
   <textarea id="entryText" placeholder="Write something..."></textarea>
@@ -68,6 +68,22 @@
   <div id="entries"></div>
 
   <script>
+const h1 = document.getElementById("h1");
+const h1Text = h1.children[0];
+h1.addEventListener("click", e => {
+ h1Text.remove();
+ const input = document.createElement("input");
+ h1.appendChild(input);
+ input.focus();
+ input.addEventListener("blur", e => {
+  input.remove();
+  h1.appendChild(document.createTextNode("..."));
+  setTimeout(() => {
+   h1.children[0].remove();
+   h1.appendChild(h1Text);
+  }, 1000);
+ });
+});
     // --- 🔥 Initialize Firebase ---
     const firebaseConfig = {
       apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
