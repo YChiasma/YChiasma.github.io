@@ -47,6 +47,243 @@
     .fadeInUp{animation:fadeInUp .3s ease forwards}
     @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
     .pulse{animation:pulse .4s ease}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 720px) {
+  body {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .app {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .calendar-wrap {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+  }
+
+  .panel {
+    margin-top: 12px;
+  }
+
+  /* Calendar grid scaling */
+  :root {
+    --cell-size: 40px;
+  }
+
+  .grid {
+    justify-content: center;
+  }
+
+  .month-card {
+    max-width: 100%;
+  }
+
+  .day {
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .day .n {
+    font-size: 13px;
+  }
+
+  /* Bigger tap targets */
+  .btn {
+    padding: 10px 12px;
+  }
+
+  /* Login form stacking */
+  #loginForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #loginForm input {
+    width: 100%;
+  }
+
+  /* Stats layout */
+  #statsPanel > div:first-child {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .stat {
+    font-size: 24px;
+  }
+
+  .footer {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 720px) {
+  .btn.nav {
+    padding: 10px 14px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .day[data-today="true"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Sticky Today FAB */
+#stickyToday {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 50;
+
+  background: linear-gradient(90deg, var(--accent), #5b21b6);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  cursor: pointer;
+
+  display: none;
+}
+
+/* Show only on mobile */
+@media (max-width: 720px) {
+  #stickyToday {
+    display: block;
+  }
+}
+
+/* Bottom sheet */
+#sheetBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 90;
+  display: none;
+}
+
+#bottomSheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -100%;
+  z-index: 100;
+
+  background: linear-gradient(180deg, #0b1220, #020617);
+  border-radius: 16px 16px 0 0;
+  padding: 12px 16px 20px;
+
+  transition: bottom .25s ease;
+}
+
+#bottomSheet.open {
+  bottom: 0;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 999px;
+  margin: 6px auto 12px;
+}
+
+.sheet-content h3 {
+  margin: 0 0 6px;
+}
+
+.sheet-status {
+  margin: 12px 0;
+  font-weight: 600;
+}
+
+/* Only mobile */
+@media (min-width: 721px) {
+  #sheetBackdrop,
+  #bottomSheet {
+    display: none !important;
+  }
+}
+
+/* Summary pill */
+.summary-pill {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.summary-pill.done {
+  background: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+}
+
+.summary-pill.undone {
+  background: rgba(250, 204, 21, 0.15);
+  color: #fde047;
+}
+
+.summary-pill.broken {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.summary-pill:active {
+  transform: scale(0.97);
+}
+
+/* Mobile only */
+@media (min-width: 721px) {
+  .summary-pill {
+    display: none !important;
+  }
+}
+
+@keyframes pillPulse {
+  0% { box-shadow: 0 0 0 0 rgba(250,204,21,0.4); }
+  100% { box-shadow: 0 0 0 12px rgba(250,204,21,0); }
+}
+
+.summary-pill.undone {
+  animation: pillPulse 1.5s infinite;
+}
+
+
   </style>
 </head>
 <body>
@@ -72,6 +309,10 @@
     </header>
 
     <div style="display:flex; gap:8px; align-items:center">
+      <input type="text" id="streakName" name="streakName" value="">
+      <button class="btn" id="renameBtn">Rename</button>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center">
       <select id="streakSelect" class="btn">
         <option value="default">Default</option>
         <option value="Running">Running</option>
@@ -91,12 +332,13 @@
         <div class="loading-overlay" id="loadingOverlay" style="display:none"><div class="spinner"></div></div>
         <div class="month-header">
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn" id="prevMonth">◀</button>
+            <button class="btn nav" id="prevMonth">◀</button>
             <div class="month-title" id="monthTitle">Month</div>
-            <button class="btn" id="nextMonth">▶</button>
+            <button class="btn nav" id="nextMonth">▶</button>
           </div>
           <div class="muted" id="rangeLabel">Showing</div>
         </div>
+        <div id="summaryPill" class="summary-pill" style="display:none"></div>
         <div class="grid" style="margin-bottom:6px">
           <div class="weekday">Sun</div><div class="weekday">Mon</div><div class="weekday">Tue</div><div class="weekday">Wed</div><div class="weekday">Thu</div><div class="weekday">Fri</div><div class="weekday">Sat</div>
         </div>
@@ -125,385 +367,29 @@
     <div class="footer">Built with ❤️ and Firebase sync</div>
   </div>
 
-  <script type="module">
-const urlParams = new URLSearchParams(window.location.search);
-const publicUser = urlParams.get("user");
-const publicStreak = urlParams.get("streak");
+<div id="sheetBackdrop"></div>
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+<div id="bottomSheet">
+  <div class="sheet-handle"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
-      authDomain: "streak-eda1a.firebaseapp.com",
-      projectId: "streak-eda1a",
-    };
+  <div class="sheet-content">
+    <h3 id="sheetTitle">Streak</h3>
+    <p id="sheetDate" class="muted"></p>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    <div id="sheetStatus" class="sheet-status"></div>
 
-    // Ensure user stays logged in across tabs/pages
-    await setPersistence(auth, browserLocalPersistence);
-
-    let userId = null;
-    let cache = {};
-    let prevStats = {current:0,longest:0,total:0};
-
-let publicMode = false;
-
-if (publicUser && publicStreak) {
-  // Public view mode
-  console.log("Public mode");
-  publicMode = true;
-  document.getElementById("loginForm").style.display = "none";
-  document.getElementById("logoutBtn").style.display = "none";
-  document.getElementById("clearBtn").style.display = "none";
-  document.getElementById("todayBtn").style.display = "none";
-  document.getElementById("publicToggle").disabled = true;
-  document.getElementById("shareLinkBtn").style.display = "none";
-
-  loadPublicStreak(publicUser, publicStreak);
-}
-
-async function loadPublicStreak(uid, streakName) {
-  const streakDocRef = doc(db, "users", uid, "streaks", streakName);
-  const streakSnap = await getDoc(streakDocRef);
-  if (!streakSnap.exists() || !streakSnap.data().public) {
-    alert("This streak is private or does not exist.");
-    return;
-  }
-
-  cache = {};
-  const daysCol = collection(db, "users", uid, "streaks", streakName, "days");
-  const snaps = await getDocs(daysCol);
-  snaps.forEach(docSnap => (cache[docSnap.id] = true));
-  const today = new Date();
-  setView(today.getFullYear(), today.getMonth());
-}
+    <button id="sheetAction" class="btn primary" style="width:100%">
+      Mark done
+    </button>
+  </div>
+</div>
 
 
-    function uidDate(d){
-      const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); const day=d.getDate().toString().padStart(2,'0');
-      return `${y}-${m}-${day}`;
-    }
+<button id="stickyToday" aria-label="Go to today">
+  Today
+</button>
 
-    let viewYear, viewMonth;
-
-    function setView(y,m){ viewYear=y; viewMonth=m; loadMonthRange(y,m); }
-
-    function getMonthInfo(y,m){
-      const first=new Date(y,m,1); const last=new Date(y,m+1,0);
-      return {firstDayIndex:first.getDay(), days:last.getDate()}
-    }
-
-    function streakRef(dateStr) {
-      return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
-    }
-
-    async function isDone(dateStr){ if(dateStr in cache) return cache[dateStr];
-      const snap = await getDoc(streakRef(dateStr));
-      cache[dateStr] = snap.exists();
-      return cache[dateStr];
-    }
-
-    async function toggleDay(dateStr){
-      if(await isDone(dateStr)){
-        await deleteDoc(streakRef(dateStr));
-        cache[dateStr]=false;
-      } else {
-        await setDoc(streakRef(dateStr), {done:true, ts:Date.now()});
-        cache[dateStr]=true;
-      }
-      render();
-    }
-
-    function animateNumber(el, from, to, duration=500){
-      const start = performance.now();
-      const easeOutCubic = t => 1 - Math.pow(1-t,3);
-      function step(time){
-        let t = Math.min((time-start)/duration,1);
-        el.textContent = Math.floor(from + (to-from)*easeOutCubic(t));
-        if(t<1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-
-    async function render(){
-      if(!userId && !publicMode) return;
-      const daysGrid=document.getElementById('daysGrid');
-      const {firstDayIndex, days}=getMonthInfo(viewYear, viewMonth);
-      const monName=new Date(viewYear,viewMonth,1).toLocaleString(undefined,{month:'long',year:'numeric'});
-      document.getElementById('monthTitle').textContent=monName;
-      document.getElementById('rangeLabel').textContent=`Viewing ${monName}`;
-      daysGrid.innerHTML='';
-      for(let i=0;i<firstDayIndex;i++){
-        const el=document.createElement('div'); el.className='day inactive'; daysGrid.appendChild(el);
-      }
-      for(let d=1;d<=days;d++){
-        const date=new Date(viewYear,viewMonth,d); const id=uidDate(date);
-        const el=document.createElement('button'); el.className='day'; el.innerHTML=`<div class="n">${d}</div>`;
-        if(cache[id]) el.setAttribute('data-state','done');
-        el.addEventListener('click',()=>toggleDay(id));
-        daysGrid.appendChild(el);
-      }
-      daysGrid.classList.remove('fadeInUp');
-      void daysGrid.offsetWidth;
-      daysGrid.classList.add('fadeInUp');
-      updateStats();
-      document.getElementById('loadingOverlay').style.display='none';
-      highlightToday();
-    }
-
-    function updateStats(){
-      const keys=Object.keys(cache).filter(k=>cache[k]).sort();
-      const total = keys.length;
-      let longest=0, running=0, prev=null;
-      for(const k of keys){
-        const [y,m,d]=k.split('-').map(Number);
-        const dt=new Date(y,m-1,d);
-        if(!prev) running=1; else{
-          const diff=(dt-prev)/(1000*60*60*24);
-          if(diff===1) running++; else running=1;
-        }
-        if(running>longest) longest=running;
-        prev=dt;
-      }
-      let cur=0; let t=new Date();
-      while(true){ const k=uidDate(t); if(cache[k]){cur++; t.setDate(t.getDate()-1);} else break; }
-      const panel=document.getElementById('statsPanel');
-      panel.classList.remove('fadeInUp');
-      void panel.offsetWidth;
-      panel.classList.add('fadeInUp');
-      animateNumber(document.getElementById('currentStreak'), prevStats.current, cur);
-      animateNumber(document.getElementById('longestStreak'), prevStats.longest, longest);
-      animateNumber(document.getElementById('totalMarked'), prevStats.total, total);
-      prevStats={current:cur,longest:longest,total:total};
-    }
-
-    async function loadMonthRange(y,m){
-      if(!userId && !publicMode) return;
-      document.getElementById('loadingOverlay').style.display='flex';
-      const start=new Date(y,m-1,1);
-      const end=new Date(y,m+2,0);
-      let streaksCol = null;
-      if(!publicMode)
-        streaksCol = collection(db, "users", userId, "streaks", currentStreakName, "days");
-      else
-        streaksCol = collection(db, "users", publicUser, "streaks", publicStreak, "days");
-      const q=query(
-        streaksCol,
-        where("ts", ">=", start.getTime()),
-        where("ts", "<=", end.getTime())
-      );
-      const snaps=await getDocs(q);
-      snaps.forEach(docSnap=>{
-        if(docSnap.exists()){
-          cache[docSnap.id] = true;
-        }
-      });
-      render();
-    }
-
-    function highlightToday(){
-      const today = new Date();
-      if(today.getFullYear()!==viewYear || today.getMonth()!==viewMonth) return;
-      const id = uidDate(today);
-      const days = document.querySelectorAll('#daysGrid .day');
-      days.forEach(day=>{
-        if(day.textContent==today.getDate().toString()){
-          day.classList.add('pulse');
-          day.scrollIntoView({behavior:'smooth', block:'center'});
-          setTimeout(()=>day.classList.remove('pulse'),400);
-        }
-      });
-    }
-
-    document.getElementById('prevMonth').addEventListener('click',()=>{const dt=new Date(viewYear,viewMonth-1,1); setView(dt.getFullYear(),dt.getMonth());});
-    document.getElementById('nextMonth').addEventListener('click',()=>{const dt=new Date(viewYear,viewMonth+1,1); setView(dt.getFullYear(),dt.getMonth());});
-    document.getElementById('todayBtn').addEventListener('click',()=>{const t=new Date(); setView(t.getFullYear(),t.getMonth());});
-    document.getElementById('clearBtn').addEventListener('click',async()=>{if(confirm('Clear all streaks?')){for(const k of Object.keys(cache)){if(cache[k]){await deleteDoc(streakRef(k)); cache[k]=false;}} render();}});
-
-    document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-      await signOut(auth);
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const email=document.getElementById('email').value;
-      const password=document.getElementById('password').value;
-      try{
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch(err){
-        alert("Login failed: "+err.message);
-        document.getElementById('password').focus();
-      }
-    });
-
-    onAuthStateChanged(auth, async (user)=>{
-const loginFormDisplay = document.getElementById('loginForm').style.display;
-      if(user){
-        userId=user.uid;
-        document.getElementById('loginForm').style.display='none';
-        document.getElementById('logoutBtn').style.display='inline-block';
-        const t=new Date();
-        setView(t.getFullYear(), t.getMonth());
-await loadStreakList();
-await loadStreak(currentStreakName);
-      } else {
-        userId=null;
-        document.getElementById('loginForm').style.display=loginFormDisplay;
-        document.getElementById('logoutBtn').style.display='none';
-        document.getElementById('email').focus();
-      }
-    });
-
-    let currentStreakName = "default"; // or "Running", "Meditation", etc.
-
-    document.getElementById('streakSelect').addEventListener('change', async e => {
-      currentStreakName = e.target.value;
-      cache = {};
-      const t = new Date();
-      setView(t.getFullYear(), t.getMonth());
-
-  // update checkbox
-  await syncPublicCheckbox(currentStreakName);
-    });
-
-async function loadStreakList() {
-  const select = document.getElementById("streakSelect");
-  select.innerHTML = ""; // clear existing
-
-  if(null === userId) return;
-  const streaksCol = collection(db, "users", userId, "streaks");
-  const snaps = await getDocs(streaksCol);
-
-  if (snaps.empty) {
-    // create a default streak if none exist
-    await setDoc(doc(db, "users", userId, "streaks", "default"), {
-      createdAt: Date.now()
-    });
-    const opt = document.createElement("option");
-    opt.value = "default";
-    opt.textContent = "default";
-    select.appendChild(opt);
-    currentStreakName = "default";
-    return;
-  }
-
-  snaps.forEach(docSnap => {
-
-    const name = docSnap.id;
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-
-  // pick first streak as active
-  currentStreakName = select.options[0].value;
-  select.value = currentStreakName;
-}
-
-document.getElementById("newStreakBtn").addEventListener("click", async () => {
-  const name = prompt("Enter a name for your new streak:");
-  if (!name) return;
-
-  const safeName = name.trim().replace(/[.#$/[\]]/g, "_");
-  if (!safeName) return alert("Invalid streak name");
-
-  const streakDoc = doc(db, "users", userId, "streaks", safeName);
-  await setDoc(streakDoc, { createdAt: Date.now() });
-
-  // refresh list
-  await loadStreakList();
-
-  // select new streak
-  document.getElementById("streakSelect").value = safeName;
-  currentStreakName = safeName;
-  cache = {};
-  const t = new Date();
-  setView(t.getFullYear(), t.getMonth());
-});
-
-await loadStreakList();
-const t = new Date();
-setView(t.getFullYear(), t.getMonth());
-
-async function togglePublic(streakName, value) {
-  const streakDoc = doc(db, "users", userId, "streaks", streakName);
-  await setDoc(streakDoc, { public: value }, { merge: true });
-
-
-}
-
-const publicToggle = document.getElementById("publicToggle");
-publicToggle.addEventListener("click", async () => { 
-  togglePublic(currentStreakName, publicToggle.checked); 
-});
-
-publicToggle.addEventListener("change", async (e) => { 
- // Toggle share link visibility
-  document.getElementById("shareLinkBtn").style.display = e.target.checked ? "inline-block" : "none";
-});
-
-document.getElementById("shareLinkBtn").addEventListener("click", async () => {
-  const link = `${window.location.origin}?user=${userId}&streak=${encodeURIComponent(currentStreakName)}`;
-  await navigator.clipboard.writeText(link);
-  alert("Share link copied to clipboard!");
-});
-
-
-
-async function syncPublicCheckbox(streakName) {
-  const checkbox = document.getElementById("publicToggle");
-  if (!streakName || !userId) return;
-
-  const streakDocRef = doc(db, "users", userId, "streaks", streakName);
-  const streakSnap = await getDoc(streakDocRef);
-
-  if (streakSnap.exists()) {
-    const data = streakSnap.data();
-    checkbox.checked = !!data.public;  // set checkbox state
-  } else {
-    checkbox.checked = false; // default to private if no doc
-  }
-}
-
-async function loadStreak(streakName) {
-  if (!userId) return;
-
-  currentStreakName = streakName;
-  cache = {};
-
-  // 🔹 Sync public toggle
-  const checkbox = document.getElementById("publicToggle");
-  const streakDocRef = doc(db, "users", userId, "streaks", streakName);
-  const streakSnap = await getDoc(streakDocRef);
-  if (streakSnap.exists()) {
-    checkbox.checked = !!streakSnap.data().public;
-  } else {
-    checkbox.checked = false;
-  }
-
-const shareBtn = document.getElementById("shareLinkBtn");
-if (checkbox.checked) {
-  shareBtn.style.display = "inline-block";
-} else {
-  shareBtn.style.display = "none";
-}
-
-  // 🔹 Refresh the calendar
-  const today = new Date();
-  setView(today.getFullYear(), today.getMonth());
-}
-
-document.getElementById('streakSelect').addEventListener('change', e => {
-  loadStreak(e.target.value);
-});
-
-
+  <script type="module" src="streak.js">
   </script>
 </body>
 </html>

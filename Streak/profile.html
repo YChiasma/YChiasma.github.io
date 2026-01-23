@@ -19,7 +19,14 @@
   </style>
 </head>
 <body>
+
   <div class="container">
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit" class="btn primary">Login</button>
+    </form>
+    <h1><span id="userDisplayName"></span>'s Profile</h1><button class="btn" id="changeName">Change Display Name</button><button class="btn" id="saveName" style="display: none;">Save</button>
     <h1 id="profileTitle">User Profile</h1>
     <div class="muted" id="profileSubtitle">Loading streaks...</div>
     <div class="streak-list" id="streakList"></div>
@@ -27,8 +34,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, collection, getDoc, getDocs, query, orderBy, doc, setDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
@@ -39,22 +46,57 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    let displayName = undefined;
+    
+    async function getUserInfo(userId) {
+      const userDocRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userDocRef);
+      if(userSnap.exists()) {
+        const data = userSnap.data();
+        if(data.displayName) {
+          displayName = data.displayName;
+          document.getElementById("userDisplayName").textContent = displayName;
+        }
+      }
+    }
+
     // Ensure user stays logged in across tabs/pages
     await setPersistence(auth, browserLocalPersistence);
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById('email').value;
+      const password=document.getElementById('password').value;
+      try{
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch(err){
+        alert("Login failed: "+err.message);
+        document.getElementById('password').focus();
+      }
+    });
+
 
     const params = new URLSearchParams(window.location.search);
     const profileUid = params.get("user");
     const listEl = document.getElementById("streakList");
     let currentUser = null;
 
+function formatDateToYYYYMMDD(date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+  const day = date.getDate().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
 // Helper to calculate streak stats
 async function getStreakInfo(db, uid, streakName) {
   const daysCol = collection(db, "users", uid, "streaks", streakName, "days");
-  const q = query(daysCol, orderBy("date"));
+  const q = query(daysCol, orderBy("ts", "desc"));
   const snap = await getDocs(q);
 
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = formatDateToYYYYMMDD(new Date());
+  const today = new Date(todayStr);
   const days = snap.docs.map(d => d.id).sort();
   const doneDays = new Set(days);
 
@@ -68,7 +110,7 @@ async function getStreakInfo(db, uid, streakName) {
       const diffDays = Math.floor((today - lastDone) / (1000 * 60 * 60 * 24));
       if (diffDays === 1) status = "undone";
       else status = "broken";
-    } else status = "undone";
+    } else status = "not started";
   }
 
   let count = 0;
@@ -98,7 +140,8 @@ function makeStatusButton(status) {
   const colorMap = {
     done: "#16a34a",
     undone: "#facc15",
-    broken: "#ef4444"
+    broken: "#ef4444",
+    broken: "#3333ef"
   };
 
   btn.style.background = colorMap[status] || "#64748b";
@@ -111,9 +154,9 @@ function makeStatusButton(status) {
   return btn;
 }
 async function markDoneToday(db, uid, streakName, card) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatDateToYYYYMMDD(new Date());
   const dayRef = doc(db, "users", uid, "streaks", streakName, "days", today);
-  await setDoc(dayRef, { done: true, date: today });
+  await setDoc(dayRef, { done: true, date: today, ts: Date.now() });
   // Refresh UI
   const info = await getStreakInfo(db, uid, streakName);
   updateCardStatus(card, info);
@@ -184,10 +227,34 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   viewBtn.className = "btn view";
   viewBtn.style.marginLeft = "8px";
   viewBtn.onclick = () => {
-    const url = `index.html?user=${uid}&streak=${encodeURIComponent(name)}`;
+    const url = `streak.html?user=${uid}&streak=${encodeURIComponent(name)}`;
     window.location.href = url;
   };
   right.appendChild(viewBtn);
+
+if (!isOwner && isPublic && auth.currentUser) {
+  const followBtn = document.createElement("button");
+  followBtn.className = "btn";
+  followBtn.textContent = "Follow";
+
+  isFollowing(profileUid, streakId).then(followed => {
+    followBtn.textContent = followed ? "Following" : "Follow";
+  });
+
+  followBtn.onclick = async () => {
+    const followed = await isFollowing(profileUid, streakId);
+    if (followed) {
+      await unfollowStreak(profileUid, streakId);
+      followBtn.textContent = "Follow";
+    } else {
+      await followStreak(profileUid, streakId, displayName);
+      followBtn.textContent = "Following";
+    }
+  };
+
+  right.appendChild(followBtn);
+}
+
 
   card.appendChild(left);
   card.appendChild(right);
@@ -195,15 +262,33 @@ async function renderStreakCard(db, uid, name, info, isPublic, isOwner) {
   return card;
 }
 async function loadProfile(uid, isOwner) {
+  getUserInfo(uid);
+  
+  if(!isOwner) {
+    changeNameButton.style.display = "none";
+  }
+  
   const streaksCol = collection(db, "users", uid, "streaks");
-  const streaksSnap = await getDocs(streaksCol);
+  let streaksSnap = null;
+  if(isOwner) {
+    streaksSnap = await getDocs(streaksCol);
+  } else {
+    const publicStreaksQuery = query(
+      streaksCol,
+      where("public", "==", true)
+    );
+    streaksSnap = await getDocs(publicStreaksQuery);
+  }
   listEl.innerHTML = "";
 
   for (const streakDoc of streaksSnap.docs) {
     const data = streakDoc.data();
     if (isOwner || data.public) {
+      if (!data.displayName) {
+        updateDoc(streakDoc.ref, { displayName: streakDoc.id });
+      }
       const info = await getStreakInfo(db, uid, streakDoc.id);
-      renderStreakCard(db, uid, streakDoc.id, info, !!data.public, isOwner);
+      renderStreakCard(db, uid, data.displayName || streakDoc.id, info, !!data.public, isOwner);
     }
   }
 
@@ -212,19 +297,90 @@ async function loadProfile(uid, isOwner) {
 }
 
     onAuthStateChanged(auth, user => {
+      if(user) {
+       document.getElementById("loginForm").style.display = "none";
+      }
       currentUser = user;
       if(null == user) return;
-      console.log(user);
+      let isOwner = false;
       if(null == profileUid) {
-        let isOwner = true;
+        isOwner = true;
         loadProfile(user.uid, true);
       }
-      else {console.log(typeof(profileUid));
-        let isOwner = user && user.uid === profileUid;
+      else {
+        isOwner = user && user.uid === profileUid;
         loadProfile(profileUid, isOwner);
       }
       document.getElementById("profileTitle").textContent = isOwner ? "My Profile" : "User Profile";
     });
+
+function setDisplayName(newName) {
+  displayName = newName;
+  const userDisplayName = document.getElementById("userDisplayName");
+  userDisplayName.innerHTML ="";
+  userDisplayName.textContent = displayName;
+  changeNameButton.style.display = "";
+  saveNameButton.style.display = "none";
+  const userRef = doc(db, "users", currentUser.uid);
+  setDoc(userRef, { displayName: displayName });
+}
+
+const changeNameButton = document.getElementById("changeName");
+const saveNameButton = document.getElementById("saveName");
+let textField = null;
+
+saveNameButton.addEventListener("click", () => {
+  setDisplayName(textField.value);
+});
+
+changeNameButton.addEventListener("click", () => {
+  textField = document.createElement("input");
+  textField.value = displayName;
+  const userDisplayName = document.getElementById("userDisplayName");
+  userDisplayName.textContent = "";
+  userDisplayName.appendChild(textField);
+  textField.select();
+  textField.addEventListener("keyup", (e) => {
+    if("Enter" == e.key) {
+      setDisplayName(textField.value);
+    }
+  });
+  changeNameButton.style.display = "none";
+  saveNameButton.style.display = "";
+});
+
+async function isFollowing(ownerUid, streakId) {
+  const q = query(
+    collection(db, "users", auth.currentUser.uid, "following"),
+    where("ownerUid", "==", ownerUid),
+    where("streakId", "==", streakId)
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+async function followStreak(ownerUid, streakId, displayName) {
+  await addDoc(
+    collection(db, "users", auth.currentUser.uid, "following"),
+    {
+      ownerUid,
+      streakId,
+      displayName,
+      followedAt: Date.now()
+    }
+  );
+}
+
+async function unfollowStreak(ownerUid, streakId) {
+  const q = query(
+    collection(db, "users", auth.currentUser.uid, "following"),
+    where("ownerUid", "==", ownerUid),
+    where("streakId", "==", streakId)
+  );
+  const snap = await getDocs(q);
+  snap.forEach(doc => deleteDoc(doc.ref));
+}
+
   </script>
 </body>
 </html>
