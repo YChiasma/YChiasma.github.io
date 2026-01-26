@@ -74,12 +74,14 @@ h1.addEventListener("click", e => {
  h1Text.remove();
  const input = document.createElement("input");
  h1.appendChild(input);
- input.focus();
+ input.value = h1Text.textContent;
+ input.select();
  input.addEventListener("blur", e => {
   input.remove();
-  h1.appendChild(document.createTextNode("..."));
+  const loadingIndicator = document.createTextNode("...");
+  h1.appendChild();
   setTimeout(() => {
-   h1.children[0].remove();
+   loadingIndicator.remove();
    h1.appendChild(h1Text);
   }, 1000);
  });
