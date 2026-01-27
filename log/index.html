@@ -76,15 +76,19 @@ h1.addEventListener("click", e => {
  h1.appendChild(input);
  input.value = h1Text.textContent;
  input.select();
- input.addEventListener("blur", e => {
+ const saveName = e => {
   input.remove();
+  console.log("TODO: Send new name to Backend");
   const loadingIndicator = document.createTextNode("...");
-  h1.appendChild();
+  h1.appendChild(loadingIndicator);
   setTimeout(() => {
+   console.log("TODO: Load name from Backend to confirm update");
    loadingIndicator.remove();
    h1.appendChild(h1Text);
   }, 1000);
- });
+ }
+ // TODO: Remove: input.addEventListener("blur", saveName);
+ input.addEventListener("keypress", e => { if(e.key == "Enter") { saveName(e) } else { console.log(e) }}); // TODO: simplify this
 });
     // --- 🔥 Initialize Firebase ---
     const firebaseConfig = {
