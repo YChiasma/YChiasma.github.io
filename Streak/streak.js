@@ -1,3 +1,9 @@
+function markDone() {
+  alert("Done!"); // TODO: make work
+}
+
+document.getElementById("markDoneBtn").addEventListener("click", markDone);
+
 const urlParams = new URLSearchParams(window.location.search);
 const publicUser = urlParams.get("user");
 const publicStreak = urlParams.get("streak");
