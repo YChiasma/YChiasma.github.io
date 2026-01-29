@@ -1,5 +1,6 @@
 function markDone() {
-  alert("Done!"); // TODO: make work
+  const date = uidDate(new Date());
+  if(!isDone(date)) toggleDay(date); // TODO: test
 }
 
 document.getElementById("markDoneBtn").addEventListener("click", markDone);
