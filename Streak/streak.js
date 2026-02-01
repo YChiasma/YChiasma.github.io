@@ -1,5 +1,6 @@
 function markDone() {
   const date = uidDate(new Date());
+  console.log(date); console.log(isDone(date));
   if(!isDone(date)) toggleDay(date); // TODO: test
 }
 
