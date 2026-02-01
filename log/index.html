@@ -80,6 +80,7 @@ const h1Clicked = e => {
  const saveName = e => {
   input.remove();
   console.log("TODO: Send new name to Backend");
+  // await db.collection("logs").doc(logId)
   const loadingIndicator = document.createTextNode("...");
   h1.appendChild(loadingIndicator);
   setTimeout(() => {
