@@ -2,7 +2,7 @@ function markDone() {
   const date = uidDate(new Date());
   isDone(date).then(x => {
    console.log(x);
-   if(x) toggleDay(date);
+   if(!x) toggleDay(date);
   }); // TODO: test
 }
 
