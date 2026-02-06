@@ -97,16 +97,16 @@ const h1Clicked = e => {
  input.select();
  const saveName = e => {
   input.remove();
-  console.log("TODO: Send new name to Backend");
-  // await db.collection("logs").doc(logId)
+  savePageName(logId, input.value).then(() => {
+   getPageName(logId).then((name) => {
+     h1Text.textContent = name;
+     loadingIndicator.remove();
+     h1.appendChild(h1Text);
+     h1.addEventListener("click", h1Clicked);
+   });
+  });
   const loadingIndicator = document.createTextNode("...");
   h1.appendChild(loadingIndicator);
-  setTimeout(() => {
-   console.log("TODO: Load name from Backend to confirm update");
-   loadingIndicator.remove();
-   h1.appendChild(h1Text);
-   h1.addEventListener("click", h1Clicked);
-  }, 1000);
  }
  input.addEventListener("blur", e => {
   input.remove();
