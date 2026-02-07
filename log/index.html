@@ -6,7 +6,7 @@
   <title>Shared Log</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/9.0.0/uuidv4.min.js"></script>
+  <!-- TODO: Remove script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/9.0.0/uuidv4.min.js"></script -->
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -68,6 +68,7 @@
   <div id="entries"></div>
 
   <script>
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 async function savePageName(pageId, newName) {
   const ref = doc(db, "pages", pageId);
 
