@@ -68,9 +68,9 @@
   <div id="entries"></div>
 
   <script>
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+// import { doc, setDoc, getDoc } from 'firebase/firestore';
 async function savePageName(pageId, newName) {
-  const ref = doc(db, "pages", pageId);
+  const ref = db.collection("pages").doc(pageId);
 
   await setDoc(
     ref,
@@ -80,7 +80,7 @@ async function savePageName(pageId, newName) {
 }
 
 async function getPageName(pageId) {
-  const ref = doc(db, "pages", pageId);
+  const ref = db.collection("pages").doc(pageId);
   const snap = await getDoc(ref);
 
   if (!snap.exists()) return null;
