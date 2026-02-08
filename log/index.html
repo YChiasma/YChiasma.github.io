@@ -72,8 +72,7 @@
 async function savePageName(pageId, newName) {
   const ref = db.collection("pages").doc(pageId);
 
-  await setDoc(
-    ref,
+  await ref.set(
     { name: newName, updatedAt: Date.now() },
     { merge: true } // important: don’t overwrite the whole doc
   );
