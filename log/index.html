@@ -117,8 +117,10 @@ const h1Clicked = e => {
  input.addEventListener("keypress", e => { if(e.key == "Enter") { saveName(e) }}); // TODO: simplify this
 }
 h1.addEventListener("click", h1Clicked);
-getPageName(logId).then((name) => {
-  h1Text.textContent = name;
+document.addEventListener('DOMContentLoaded', (event) => {
+  getPageName(logId).then((name) => {
+    h1Text.textContent = name;
+  });
 });
 
     // --- 🔥 Initialize Firebase ---
