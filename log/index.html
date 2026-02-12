@@ -119,7 +119,9 @@ const h1Clicked = e => {
 h1.addEventListener("click", h1Clicked);
 document.addEventListener('DOMContentLoaded', (event) => {
   getPageName(logId).then((name) => {
-    h1Text.textContent = name;
+    if(name) {
+      h1Text.textContent = name;
+    }
   });
 });
 
