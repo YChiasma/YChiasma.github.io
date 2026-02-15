@@ -1,3 +1,7 @@
+document.getElementById("guestMode").addEventListener("click", () => {
+  console.log("Beginning guest session...");
+});
+
 function markDone() {
   const date = uidDate(new Date());
   isDone(date).then(x => {
