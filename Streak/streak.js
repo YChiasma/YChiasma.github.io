@@ -1,3 +1,49 @@
+function getOrCreateAdminKey(options = {}) {
+  const {
+    name = "adminKey",
+    days = 365,
+    sameSite = "Strict",
+    secure = location.protocol === "https:"
+  } = options;
+
+  function getCookie(name) {
+    const match = document.cookie.match(
+      new RegExp("(^|;\\s*)" + name + "=([^;]*)")
+    );
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+
+    let cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=${sameSite}`;
+
+    if (secure) cookie += "; Secure";
+
+    document.cookie = cookie;
+  }
+
+  function generateUUID() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+
+    // Fallback UUID generator
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  let key = getCookie(name);
+  if (key) return key;
+
+  key = generateUUID();
+  setCookie(name, key, days);
+  return key;
+}
+
 function createModal({ 
   title = "Enter Text", 
   buttonText = "Submit", 
@@ -72,6 +118,11 @@ function createModal({
 }
 
 document.getElementById("guestMode").addEventListener("click", () => {
+  const adminKey = getOrCreateAdminKey();
+  document.getElementById("adminKeyForm").style.display = "block";
+  document.getElementById("adminKey").value = adminKey;
+  return; // TODO : Remove modal stuff after testing adminKey sufficiently
+  // TODO : alert user when new adminKey is created so that they know they need to save or bookmark it
   createModal({
     title: "Admin Key (Use the same Admin Key to identify you as the owner of your streaks)",
     buttonText: "Login as guest",
