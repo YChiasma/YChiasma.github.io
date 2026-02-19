@@ -120,7 +120,9 @@ function createModal({
 document.getElementById("guestMode").addEventListener("click", () => {
   const adminKey = getOrCreateAdminKey();
   document.getElementById("adminKeyForm").style.display = "block";
-  document.getElementById("adminKey").value = adminKey;
+  const adminKeyInput = document.getElementById("adminKey");
+  adminKeyInput.value = adminKey;
+  adminKeyInput.size = adminKey.length;
   return; // TODO : Remove modal stuff after testing adminKey sufficiently
   // TODO : alert user when new adminKey is created so that they know they need to save or bookmark it
   createModal({
