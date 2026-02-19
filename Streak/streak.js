@@ -1,10 +1,4 @@
-function getOrCreateAdminKey(options = {}) {
-  const {
-    name = "adminKey",
-    days = 365,
-    sameSite = "Strict",
-    secure = location.protocol === "https:"
-  } = options;
+
 
   function getCookie(name) {
     const match = document.cookie.match(
@@ -22,6 +16,14 @@ function getOrCreateAdminKey(options = {}) {
 
     document.cookie = cookie;
   }
+
+function getOrCreateAdminKey(options = {}) {
+  const {
+    name = "adminKey",
+    days = 365,
+    sameSite = "Strict",
+    secure = location.protocol === "https:"
+  } = options;
 
   function generateUUID() {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -118,9 +120,19 @@ function createModal({
 }
 
 document.getElementById("guestMode").addEventListener("click", () => {
+  let firstTime = false;
+  if(!getCookie("adminKey")) firstTime = true;
   const adminKey = getOrCreateAdminKey();
-  document.getElementById("adminKeyForm").style.display = "block";
+  const adminKeyForm = document.getElementById("adminKeyForm");
   const adminKeyInput = document.getElementById("adminKey");
+  adminKeyForm.style.display = "block";
+  if (firstTime) {
+    const adminKeyWarning = document.createElement("span");
+    adminKeyWarning.style.color = "red";
+    adminKeyWarning.style.textDecoration = "bold";
+    adminKeyWarning.textContent = "Warning: Copy this adminKey or you might lose access to your streaks.";
+    adminKeyForm.appendChild();
+  }
   adminKeyInput.value = adminKey;
   adminKeyInput.size = adminKey.length;
   return; // TODO : Remove modal stuff after testing adminKey sufficiently
