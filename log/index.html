@@ -183,7 +183,10 @@ addBtn.onclick = async () => {
       text,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }],
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+
     lastEdited: firebase.firestore.FieldValue.serverTimestamp()
   });
 
@@ -208,7 +211,7 @@ async function editEntry(docId, currentText) {
 
 // ---------- Listener ----------
 db.collection("logs").doc(logId).collection("entries")
-.orderBy("lastEdited","desc")
+.orderBy("timestamp","desc")
 .onSnapshot(snapshot => {
 
   entriesDiv.innerHTML = "";
