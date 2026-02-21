@@ -1,3 +1,149 @@
+
+
+  function getCookie(name) {
+    const match = document.cookie.match(
+      new RegExp("(^|;\\s*)" + name + "=([^;]*)")
+    );
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+
+    let cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=${sameSite}`;
+
+    if (secure) cookie += "; Secure";
+
+    document.cookie = cookie;
+  }
+
+function getOrCreateAdminKey(options = {}) {
+  const {
+    name = "adminKey",
+    days = 365,
+    sameSite = "Strict",
+    secure = location.protocol === "https:"
+  } = options;
+
+  function generateUUID() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+
+    // Fallback UUID generator
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  let key = getCookie(name);
+  if (key) return key;
+
+  key = generateUUID();
+  setCookie(name, key, days);
+  return key;
+}
+
+function createModal({ 
+  title = "Enter Text", 
+  buttonText = "Submit", 
+  onSubmit = (value) => console.log(value) 
+} = {}) {
+
+  // Overlay
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.background = "rgba(0,0,0,0.5)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = 1000;
+
+  // Modal box
+  const modal = document.createElement("div");
+  modal.style.background = "#fff";
+  modal.style.padding = "20px";
+  modal.style.borderRadius = "8px";
+  modal.style.minWidth = "300px";
+  modal.style.boxShadow = "0 10px 25px rgba(0,0,0,0.2)";
+  modal.style.textAlign = "center";
+
+  // Title
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+
+  // Input
+  const input = document.createElement("input");
+  input.type = "text";
+  input.style.width = "100%";
+  input.style.margin = "15px 0";
+  input.style.padding = "10px";
+  input.style.fontSize = "16px";
+
+  // Button
+  const button = document.createElement("button");
+  button.textContent = buttonText;
+  button.style.padding = "10px 20px";
+  button.style.cursor = "pointer";
+
+  // Close modal helper
+  function closeModal() {
+    document.body.removeChild(overlay);
+  }
+
+  // Button click
+  button.addEventListener("click", () => {
+    onSubmit(input.value);
+    closeModal();
+  });
+
+  // Close if clicking outside modal
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  // Assemble
+  modal.appendChild(heading);
+  modal.appendChild(input);
+  modal.appendChild(button);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Focus input automatically
+  input.focus();
+}
+
+document.getElementById("guestMode").addEventListener("click", () => {
+  let firstTime = false;
+  if(!getCookie("adminKey")) firstTime = true;
+  const adminKey = getOrCreateAdminKey();
+  const adminKeyForm = document.getElementById("adminKeyForm");
+  const adminKeyInput = document.getElementById("adminKey");
+  adminKeyForm.style.display = "block";
+  if (firstTime) {
+    const adminKeyWarning = document.createElement("span");
+    adminKeyWarning.style.color = "red";
+    adminKeyWarning.style.textDecoration = "bold";
+    adminKeyWarning.textContent = "Warning: Copy this adminKey or you might lose access to your streaks.";
+    adminKeyForm.appendChild();
+  }
+  adminKeyInput.value = adminKey;
+  adminKeyInput.size = adminKey.length;
+  return; // TODO : Remove modal stuff after testing adminKey sufficiently
+  // TODO : alert user when new adminKey is created so that they know they need to save or bookmark it
+  createModal({
+    title: "Admin Key (Use the same Admin Key to identify you as the owner of your streaks)",
+    buttonText: "Login as guest",
+    onSubmit: (value) => alert("You entered: " + value)
+  });
+});
+
 function markDone() {
   const date = uidDate(new Date());
   isDone(date).then(x => {
