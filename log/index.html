@@ -254,7 +254,7 @@ db.collection("logs").doc(logId).collection("entries")
     `;
 
     // last edited label
-    if(data.versions.length>1){
+    if(versions.length>1){
       const editedTime = data.lastEdited?.toDate?.().toLocaleString();
       const label = document.createElement("div");
       label.className="editLabel";
@@ -265,7 +265,7 @@ db.collection("logs").doc(logId).collection("entries")
       historyBox.className="historyBox";
       historyBox.style.display="none";
 
-      data.versions.slice().reverse().forEach(v=>{
+      versions.slice().reverse().forEach(v=>{
         const div=document.createElement("div");
         const t=v.timestamp?.toDate?.().toLocaleString() || "(pending)";
         div.innerHTML=`<b>${t}</b><br>${v.text.replaceAll("\n","<br>")}<hr>`;
