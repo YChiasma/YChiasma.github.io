@@ -7,7 +7,7 @@
     return match ? decodeURIComponent(match[2]) : null;
   }
 
-  function setCookie(name, value, days) {
+  function setCookie(name, value, days, sameSite="Strict") {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
 
     let cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=${sameSite}`;
@@ -42,7 +42,7 @@ function getOrCreateAdminKey(options = {}) {
   if (key) return key;
 
   key = generateUUID();
-  setCookie(name, key, days);
+  setCookie(name, key, days, sameSite);
   return key;
 }
 
