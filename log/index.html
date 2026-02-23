@@ -1,294 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shared Log</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #f9fafb;
-      padding: 2rem;
-      max-width: 600px;
-      margin: auto;
-      overflow-wrap: break-word;
-    }
-    h1 { text-align: center; cursor:pointer; }
-    textarea {
-      box-sizing: border-box;
-      font-size: 16px;
-      width: 100%;
-      height: 100px;
-      padding: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      resize: none;
-    }
-    input { font-size: 16px; }
-    button {
-      margin: 0.5rem 0;
-      padding: 0.4rem 0.7rem;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    button:hover { background: #1e40af; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shared Log</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-    .entry {
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 0.5rem 0;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .timestamp {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 0.5rem;
-    }
-
-    .editLabel {
-      font-size: 0.75rem;
-      color: #2563eb;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    .historyBox {
-      background:#f1f5f9;
-      padding:8px;
-      border-radius:6px;
-      margin-top:6px;
-      font-size:0.85rem;
-    }
-
-    #shareLink {
-      font-size: 0.9rem;
-      background: #eef;
-      padding: 0.5rem;
-      border-radius: 6px;
-      word-wrap: break-word;
-    }
-  </style>
+<style>
+body{font-family:system-ui;background:#f9fafb;padding:2rem;max-width:600px;margin:auto}
+h1{text-align:center;cursor:pointer}
+textarea{width:100%;height:100px;padding:1rem;border-radius:8px;border:1px solid #ccc}
+button{margin:.5rem 0;padding:.4rem .7rem;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer}
+.entry{background:white;padding:1rem;margin:.5rem 0;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.timestamp{font-size:.8rem;color:#666;margin-bottom:.4rem}
+.editLabel{font-size:.75rem;color:#2563eb;cursor:pointer}
+.historyBox{background:#f1f5f9;padding:8px;border-radius:6px;margin-top:6px;font-size:.85rem}
+#shareLink{background:#eef;padding:.5rem;border-radius:6px;font-size:.9rem}
+</style>
 </head>
 <body>
 
 <h1 id="h1">Shared Log</h1>
 <p id="shareLink"></p>
 
-<textarea id="entryText" placeholder="Write something..."></textarea>
+<textarea id="entryText"></textarea>
 <button id="addEntry">Add Entry</button>
-
 <div id="entries"></div>
 
 <script>
-
-// ---------- Firebase ----------
-const firebaseConfig = {
-  apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
-  authDomain: "shared-log-c1ad7.firebaseapp.com",
-  projectId: "shared-log-c1ad7",
-  storageBucket: "shared-log-c1ad7.firebasestorage.app",
-  messagingSenderId: "178184501497",
-  appId: "1:178184501497:web:e650732c8cf071f6224a28"
+// ---------------- Firebase ----------------
+const firebaseConfig={
+ apiKey:"AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
+ authDomain:"shared-log-c1ad7.firebaseapp.com",
+ projectId:"shared-log-c1ad7",
+ storageBucket:"shared-log-c1ad7.firebasestorage.app",
+ messagingSenderId:"178184501497",
+ appId:"1:178184501497:web:e650732c8cf071f6224a28"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-// ---------- Log ID ----------
-const params = new URLSearchParams(window.location.search);
-let logId = params.get("log");
-if (!logId) {
-  logId = crypto.randomUUID();
-  window.history.replaceState({}, "", `?log=${logId}`);
+// ---------------- Log ID ----------------
+const params=new URLSearchParams(location.search);
+let logId=params.get("log");
+if(!logId){
+ logId=crypto.randomUUID();
+ history.replaceState({}, "", `?log=${logId}`);
+}
+document.getElementById("shareLink").textContent=
+`${location.origin}${location.pathname}?log=${logId}`;
+
+// ---------------- Page Name ----------------
+async function savePageName(id,name){
+ await db.collection("pages").doc(id).set({name},{merge:true});
+}
+async function getPageName(id){
+ const s=await db.collection("pages").doc(id).get();
+ return s.exists?s.data().name:null;
 }
 
-const shareLink = `${window.location.origin}${window.location.pathname}?log=${logId}`;
-document.getElementById("shareLink").textContent = `Share this link: ${shareLink}`;
+const h1=document.getElementById("h1");
+const textNode=h1.firstChild;
 
-// ---------- Page Title ----------
-async function savePageName(pageId, newName) {
-  const ref = db.collection("pages").doc(pageId);
-  await ref.set({ name: newName, updatedAt: Date.now() }, { merge: true });
-}
-
-async function getPageName(pageId) {
-  const ref = db.collection("pages").doc(pageId);
-  const snap = await ref.get();
-  if (!snap.exists) return null;
-  return snap.data().name;
-}
-
-const h1 = document.getElementById("h1");
-const h1Text = h1.childNodes[0];
-
-const h1Clicked = () => {
- h1.removeEventListener("click", h1Clicked);
- h1Text.remove();
- const input = document.createElement("input");
+h1.onclick=()=>{
+ h1.onclick=null;
+ textNode.remove();
+ const input=document.createElement("input");
+ input.value=textNode.textContent;
  h1.appendChild(input);
- input.value = h1Text.textContent;
  input.select();
 
- const saveName = async () => {
-  const val = input.value || "Shared Log";
+ input.onblur=()=>{
   input.remove();
-  const loadingIndicator = document.createTextNode("...");
-  h1.appendChild(loadingIndicator);
-
-  await savePageName(logId, val);
-  const name = await getPageName(logId);
-  h1Text.textContent = name;
-
-  loadingIndicator.remove();
-  h1.appendChild(h1Text);
-  h1.addEventListener("click", h1Clicked);
+  h1.appendChild(textNode);
+  h1.onclick=arguments.callee;
  };
 
- input.addEventListener("blur", () => {
-  input.remove();
-  h1.appendChild(h1Text);
-  h1.addEventListener("click", h1Clicked);
- });
-
- input.addEventListener("keypress", e => {
-  if(e.key === "Enter") saveName();
- });
+ input.onkeypress=async e=>{
+  if(e.key==="Enter"){
+   const val=input.value||"Shared Log";
+   await savePageName(logId,val);
+   textNode.textContent=val;
+   input.blur();
+  }
+ };
 };
-h1.addEventListener("click", h1Clicked);
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const name = await getPageName(logId);
-  if(name) h1Text.textContent = name;
+document.addEventListener("DOMContentLoaded",async()=>{
+ const name=await getPageName(logId);
+ if(name) textNode.textContent=name;
 });
 
-// ---------- References ----------
-const entryText = document.getElementById("entryText");
-const addBtn = document.getElementById("addEntry");
-const entriesDiv = document.getElementById("entries");
+// ---------------- Add Entry ----------------
+addEntry.onclick=async()=>{
+ const text=entryText.value.trim();
+ // if(!text) return;
 
-// ---------- Add Entry ----------
-addBtn.onclick = async () => {
-  const text = entryText.value.trim();
-  if (!text) return;
+ const ref=await db.collection("logs")
+   .doc(logId)
+   .collection("entries")
+   .add({
+     createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+     lastEdited:firebase.firestore.FieldValue.serverTimestamp()
+   });
 
-  await db.collection("logs").doc(logId).collection("entries").add({
-    versions: [{
-      text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }],
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+ await ref.collection("versions").add({
+   text,
+   timestamp:firebase.firestore.FieldValue.serverTimestamp()
+ });
 
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-
-    lastEdited: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  entryText.value = "";
+ entryText.value="";
 };
 
-// ---------- Edit Entry ----------
-async function editEntry(docId, currentText) {
-  const newText = prompt("Edit entry:", currentText);
-  if (!newText || newText === currentText) return;
+// ---------------- Edit Entry ----------------
+async function editEntry(id,current){
+ const t=prompt("Edit entry:",current);
+ if(!t||t===current)return;
 
-  await db.collection("logs").doc(logId)
-    .collection("entries").doc(docId)
-    .update({
-      versions: firebase.firestore.FieldValue.arrayUnion({
-        text:newText,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-      }),
-      lastEdited: firebase.firestore.FieldValue.serverTimestamp()
-    });
+ const ref=db.collection("logs").doc(logId).collection("entries").doc(id);
+
+ await ref.collection("versions").add({
+   text:t,
+   timestamp:firebase.firestore.FieldValue.serverTimestamp()
+ });
+
+ await ref.update({
+   lastEdited:firebase.firestore.FieldValue.serverTimestamp()
+ });
 }
 
-// ---------- Listener ----------
-db.collection("logs").doc(logId).collection("entries")
-.orderBy("timestamp","desc")
-.onSnapshot(snapshot => {
+// ---------------- Listener ----------------
+db.collection("logs").doc(logId)
+.collection("entries")
+.orderBy("createdAt","desc")
+.onSnapshot(snap=>{
 
-  entriesDiv.innerHTML = "";
-  let lastProcessedDate = null;
+ entries.innerHTML="";
+ let lastDate=null;
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    const entry = document.createElement("div");
-    entry.className = "entry";
+ snap.forEach(doc=>{
+   const entryDiv=document.createElement("div");
+   entryDiv.className="entry";
 
-    let versions = data.versions;
+   const versionsRef=doc.ref.collection("versions").orderBy("timestamp","desc");
 
-    if(!versions){
-      // old entry format fallback
-      versions = [{
-        text:data.text,
-        timestamp:data.timestamp
-      }];
-    }
+   versionsRef.onSnapshot(vsnap=>{
+     if(vsnap.empty)return;
 
-    const latest = versions[versions.length-1];
-    const time = latest.timestamp?.toDate?.().toLocaleString() || "(pending)";
-    const date = latest.timestamp?.toDate?.().toDateString();
+     const latest=vsnap.docs[0].data();
+     const time=latest.timestamp?.toDate()?.toLocaleString()||"(pending)";
+     const date=latest.timestamp?.toDate()?.toDateString();
 
-    // date header
-    if(lastProcessedDate !== date){
-      lastProcessedDate = date;
-      const header = document.createElement("h3");
-      header.textContent = date;
-      entriesDiv.appendChild(header);
-    }
+     if(lastDate!==date){
+       lastDate=date;
+       const h=document.createElement("h3");
+       h.textContent=date;
+       entries.appendChild(h);
+     }
 
-    // text display
-    const textHTML = latest.text.replaceAll("\n","<br>");
+     entryDiv.innerHTML=`
+       <div class="timestamp">${time}</div>
+       <div>${latest.text.replaceAll("\n","<br>")}</div>
+       <button>Edit</button>
+     `;
 
-    entry.innerHTML = `
-      <div class="timestamp">${time}</div>
-      <div>${textHTML}</div>
-      <button class="editBtn">Edit</button>
-    `;
+     entryDiv.querySelector("button").onclick=
+       ()=>editEntry(doc.id,latest.text);
 
-    // last edited label
-    if(versions.length>1){
-      const editedTime = data.lastEdited?.toDate?.().toLocaleString();
-      const label = document.createElement("div");
-      label.className="editLabel";
-      label.textContent=`Last edited: ${editedTime}`;
-      entry.appendChild(label);
+     // history
+     if(vsnap.docs.length>1){
+       const label=document.createElement("div");
+       label.className="editLabel";
+       label.textContent="View history";
+       entryDiv.appendChild(label);
 
-      const historyBox = document.createElement("div");
-      historyBox.className="historyBox";
-      historyBox.style.display="none";
+       const box=document.createElement("div");
+       box.className="historyBox";
+       box.style.display="none";
 
-      versions.slice().reverse().forEach(v=>{
-        const div=document.createElement("div");
-        const t=v.timestamp?.toDate?.().toLocaleString() || "(pending)";
-        div.innerHTML=`<b>${t}</b><br>${v.text.replaceAll("\n","<br>")}<hr>`;
-        historyBox.appendChild(div);
-      });
+       vsnap.docs.forEach(d=>{
+         const v=d.data();
+         const t=v.timestamp?.toDate()?.toLocaleString();
+         box.innerHTML+=`<b>${t}</b><br>${v.text}<hr>`;
+       });
 
-      entry.appendChild(historyBox);
+       entryDiv.appendChild(box);
 
-      label.onclick=()=>{
-        historyBox.style.display =
-          historyBox.style.display==="none"?"block":"none";
-      };
-    }
+       label.onclick=()=>{
+         box.style.display=
+           box.style.display==="none"?"block":"none";
+       };
+     }
 
-    // edit button
-    entry.querySelector(".editBtn").onclick=()=>{
-      editEntry(doc.id, latest.text);
-    };
-
-    entriesDiv.appendChild(entry);
-  });
+     entries.appendChild(entryDiv);
+   });
+ });
 });
-
 </script>
 </body>
 </html>
