@@ -146,7 +146,7 @@ db.collection("logs").doc(logId)
    const versionsRef=doc.ref.collection("versions").orderBy("timestamp","desc");
 
    versionsRef.onSnapshot(vsnap=>{
-     let latest;
+     //let latest;
 
      if(vsnap.empty){
        // old entry fallback
