@@ -159,7 +159,6 @@ db.collection("logs").doc(logId)
        latest = vsnap.docs[0].data();
      }
 
-     //const latest=vsnap.docs[0].data();
      const time=latest.timestamp?.toDate()?.toLocaleString()||"(pending)";
      const date=latest.timestamp?.toDate()?.toDateString();
 
@@ -204,7 +203,7 @@ db.collection("logs").doc(logId)
        };
      }
 
-     entries.appendChild(entryDiv);
+     entries.prepend(entryDiv);
    });
  });
 });
