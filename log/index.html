@@ -101,7 +101,7 @@ addEntry.onclick=async()=>{
    .doc(logId)
    .collection("entries")
    .add({
-     createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+     timestamp:firebase.firestore.FieldValue.serverTimestamp(),
      lastEdited:firebase.firestore.FieldValue.serverTimestamp()
    });
 
@@ -133,7 +133,7 @@ async function editEntry(id,current){
 // ---------------- Listener ----------------
 db.collection("logs").doc(logId)
 .collection("entries")
-.orderBy("createdAt","desc")
+.orderBy("timestamp","desc")
 .onSnapshot(snap=>{
 
  entries.innerHTML="";
