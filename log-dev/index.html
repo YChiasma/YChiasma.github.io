@@ -143,6 +143,7 @@ addEntry.onclick=async()=>{
    .doc(logId)
    .collection("entries")
    .add({
+     text:text,
      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
      lastEdited:firebase.firestore.FieldValue.serverTimestamp()
    });
@@ -175,7 +176,7 @@ async function editEntry(id,current){
 // ---------------- Listener ----------------
 db.collection("logs").doc(logId)
 .collection("entries")
-.orderBy("timestamp","desc")
+.orderBy("timestamp","asc")
 .onSnapshot(snap=>{
 
  entries.innerHTML="";
@@ -185,7 +186,7 @@ db.collection("logs").doc(logId)
    const entryDiv=document.createElement("div");
    entryDiv.className="entry";
 
-   const versionsRef=doc.ref.collection("versions").orderBy("timestamp","desc");
+   const versionsRef=doc.ref.collection("versions").orderBy("timestamp","asc");
 
    versionsRef.onSnapshot(vsnap=>{
      let latest;
@@ -245,7 +246,7 @@ db.collection("logs").doc(logId)
        };
      }
 
-     entries.appendChild(entryDiv);
+     entries.prepend(entryDiv);
    });
  });
 });
