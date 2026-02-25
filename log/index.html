@@ -1,212 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Shared Log</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-<style>
-body{font-family:system-ui;background:#f9fafb;padding:2rem;max-width:600px;margin:auto}
-h1{text-align:center;cursor:pointer}
-textarea{width:100%;height:100px;padding:1rem;border-radius:8px;border:1px solid #ccc}
-button{margin:.5rem 0;padding:.4rem .7rem;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer}
-.entry{background:white;padding:1rem;margin:.5rem 0;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.timestamp{font-size:.8rem;color:#666;margin-bottom:.4rem}
-.editLabel{font-size:.75rem;color:#2563eb;cursor:pointer}
-.historyBox{background:#f1f5f9;padding:8px;border-radius:6px;margin-top:6px;font-size:.85rem}
-#shareLink{background:#eef;padding:.5rem;border-radius:6px;font-size:.9rem}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Log</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- TODO: Remove script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/9.0.0/uuidv4.min.js"></script -->
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f9fafb;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      overflow-wrap: break-word;
+    }
+    h1 { text-align: center; }
+    textarea {
+      box-sizing: border-box;
+      font-size: 16px;
+      width: 100%;
+      height: 100px;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: none;
+    }
+    input {
+      font-size: 16px;
+    }
+    button {
+      display: block;
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #1e40af; }
+    .entry {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .timestamp {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    #shareLink {
+      font-size: 0.9rem;
+      background: #eef;
+      padding: 0.5rem;
+      border-radius: 6px;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 <body>
+  <h1 id="h1">Shared Log</h1>
+  <p id="shareLink"></p>
 
-<h1 id="h1">Shared Log</h1>
-<p id="shareLink"></p>
+  <textarea id="entryText" placeholder="Write something..."></textarea>
+  <button id="addEntry">Add Entry</button>
 
-<textarea id="entryText"></textarea>
-<button id="addEntry">Add Entry</button>
-<div id="entries"></div>
+  <div id="entries"></div>
 
-<script>
-// ---------------- Firebase ----------------
-const firebaseConfig={
- apiKey:"AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
- authDomain:"shared-log-c1ad7.firebaseapp.com",
- projectId:"shared-log-c1ad7",
- storageBucket:"shared-log-c1ad7.firebasestorage.app",
- messagingSenderId:"178184501497",
- appId:"1:178184501497:web:e650732c8cf071f6224a28"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
+  <script>
+// import { doc, setDoc, getDoc } from 'firebase/firestore';
+async function savePageName(pageId, newName) {
+  const ref = db.collection("pages").doc(pageId);
 
-// ---------------- Log ID ----------------
-const params=new URLSearchParams(location.search);
-let logId=params.get("log");
-if(!logId){
- logId=crypto.randomUUID();
- history.replaceState({}, "", `?log=${logId}`);
-}
-document.getElementById("shareLink").textContent=
-`${location.origin}${location.pathname}?log=${logId}`;
-
-// ---------------- Page Name ----------------
-async function savePageName(id,name){
- await db.collection("pages").doc(id).set({name},{merge:true});
-}
-async function getPageName(id){
- const s=await db.collection("pages").doc(id).get();
- return s.exists?s.data().name:null;
+  await ref.set(
+    { name: newName, updatedAt: Date.now() },
+    { merge: true } // important: don’t overwrite the whole doc
+  );
 }
 
-const h1=document.getElementById("h1");
-const textNode=h1.firstChild;
+async function getPageName(pageId) {
+  const ref = db.collection("pages").doc(pageId);
+  const snap = await ref.get();
 
-h1.onclick=()=>{
- h1.onclick=null;
- textNode.remove();
- const input=document.createElement("input");
- input.value=textNode.textContent;
+  if (!snap.exists) return null;
+  return snap.data().name;
+}
+
+const h1 = document.getElementById("h1");
+const h1Text = h1.childNodes[0];
+const h1Clicked = e => {
+ h1.removeEventListener("click", h1Clicked);
+ h1Text.remove();
+ const input = document.createElement("input");
  h1.appendChild(input);
+ input.value = h1Text.textContent;
  input.select();
-
- input.onblur=()=>{
+ const saveName = e => {
   input.remove();
-  h1.appendChild(textNode);
-  h1.onclick=arguments.callee;
- };
-
- input.onkeypress=async e=>{
-  if(e.key==="Enter"){
-   const val=input.value||"Shared Log";
-   await savePageName(logId,val);
-   textNode.textContent=val;
-   input.blur();
-  }
- };
-};
-
-document.addEventListener("DOMContentLoaded",async()=>{
- const name=await getPageName(logId);
- if(name) textNode.textContent=name;
-});
-
-// ---------------- Add Entry ----------------
-addEntry.onclick=async()=>{
- const text=entryText.value.trim();
- // if(!text) return;
-
- const ref=await db.collection("logs")
-   .doc(logId)
-   .collection("entries")
-   .add({
-     timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-     lastEdited:firebase.firestore.FieldValue.serverTimestamp()
+  savePageName(logId, input.value).then(() => {
+   getPageName(logId).then((name) => {
+     h1Text.textContent = name;
+     loadingIndicator.remove();
+     h1.appendChild(h1Text);
+     h1.addEventListener("click", h1Clicked);
    });
-
- await ref.collection("versions").add({
-   text,
-   timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  const loadingIndicator = document.createTextNode("...");
+  h1.appendChild(loadingIndicator);
+ }
+ input.addEventListener("blur", e => {
+  input.remove();
+  h1.appendChild(h1Text);
+  h1.addEventListener("click", h1Clicked);
  });
-
- entryText.value="";
-};
-
-// ---------------- Edit Entry ----------------
-async function editEntry(id,current){
- const t=prompt("Edit entry:",current);
- if(!t||t===current)return;
-
- const ref=db.collection("logs").doc(logId).collection("entries").doc(id);
-
- await ref.collection("versions").add({
-   text:t,
-   timestamp:firebase.firestore.FieldValue.serverTimestamp()
- });
-
- await ref.update({
-   lastEdited:firebase.firestore.FieldValue.serverTimestamp()
- });
+ input.addEventListener("keypress", e => { if(e.key == "Enter") { saveName(e) }}); // TODO: simplify this
 }
-
-// ---------------- Listener ----------------
-db.collection("logs").doc(logId)
-.collection("entries")
-.orderBy("timestamp","desc")
-.onSnapshot(snap=>{
-
- entries.innerHTML="";
- let lastDate=null;
-
- snap.forEach(doc=>{
-   const entryDiv=document.createElement("div");
-   entryDiv.className="entry";
-
-   const versionsRef=doc.ref.collection("versions").orderBy("timestamp","desc");
-
-   versionsRef.onSnapshot(vsnap=>{
-     let latest;
-
-     if(vsnap.empty){
-       // old entry fallback
-       const d = doc.data();
-       latest = {
-         text:d.text,
-         timestamp:d.timestamp
-       };
-     }else{
-       latest = vsnap.docs[0].data();
-     }
-
-     const time=latest.timestamp?.toDate()?.toLocaleString()||"(pending)";
-     const date=latest.timestamp?.toDate()?.toDateString();
-
-     if(lastDate!==date){
-       lastDate=date;
-       const h=document.createElement("h3");
-       h.textContent=date;
-       entries.appendChild(h);
-     }
-
-     entryDiv.innerHTML=`
-       <div class="timestamp">${time}</div>
-       <div>${latest.text.replaceAll("\n","<br>")}</div>
-       <button>Edit</button>
-     `;
-
-     entryDiv.querySelector("button").onclick=
-       ()=>editEntry(doc.id,latest.text);
-
-     // history
-     if(vsnap.docs.length>1){
-       const label=document.createElement("div");
-       label.className="editLabel";
-       label.textContent="View history";
-       entryDiv.appendChild(label);
-
-       const box=document.createElement("div");
-       box.className="historyBox";
-       box.style.display="none";
-
-       vsnap.docs.forEach(d=>{
-         const v=d.data();
-         const t=v.timestamp?.toDate()?.toLocaleString();
-         box.innerHTML+=`<b>${t}</b><br>${v.text}<hr>`;
-       });
-
-       entryDiv.appendChild(box);
-
-       label.onclick=()=>{
-         box.style.display=
-           box.style.display==="none"?"block":"none";
-       };
-     }
-
-     entries.appendChild(entryDiv);
-   });
- });
+h1.addEventListener("click", h1Clicked);
+document.addEventListener('DOMContentLoaded', (event) => {
+  getPageName(logId).then((name) => {
+    if(name) {
+      h1Text.textContent = name;
+    }
+  });
 });
-</script>
+
+    // --- 🔥 Initialize Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
+      authDomain: "shared-log-c1ad7.firebaseapp.com",
+      projectId: "shared-log-c1ad7",
+      storageBucket: "shared-log-c1ad7.firebasestorage.app",
+      messagingSenderId: "178184501497",
+      appId: "1:178184501497:web:e650732c8cf071f6224a28"
+  };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- 🧭 Get or create log ID ---
+    const params = new URLSearchParams(window.location.search);
+    let logId = params.get("log");
+
+    if (!logId) {
+      logId = crypto.randomUUID();
+      window.history.replaceState({}, "", `?log=${logId}`);
+    }
+
+    const shareLink = `${window.location.origin}${window.location.pathname}?log=${logId}`;
+    document.getElementById("shareLink").textContent = `Share this link: ${shareLink}`;
+
+    // --- 📝 References ---
+    const entryText = document.getElementById("entryText");
+    const addBtn = document.getElementById("addEntry");
+    const entriesDiv = document.getElementById("entries");
+
+    // --- 💾 Add entry ---
+    addBtn.onclick = async () => {
+      const text = entryText.value.trim();
+      if (!text) return;
+
+      await db.collection("logs").doc(logId).collection("entries").add({
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      entryText.value = "";
+    };
+
+    // --- 🔁 Listen for updates ---
+    let lastProcessedDate = null;
+    db.collection("logs").doc(logId).collection("entries")
+      .orderBy("timestamp", "desc")
+      .onSnapshot(snapshot => {
+        entriesDiv.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const entry = document.createElement("div");
+          entry.className = "entry";
+
+          const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
+          const date = data.timestamp?.toDate?.().toDateString();
+          if(null == lastProcessedDate) {
+            lastProcessedDate = date;
+          }
+          else if(date != lastProcessedDate) {
+            lastProcessedDate = date;
+            const dateHeader = document.createElement("h3");
+            dateHeader.textContent = date;
+            entriesDiv.appendChild(dateHeader);
+          }
+          entry.innerHTML = `
+            <div class="timestamp">${time}</div>
+            <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
+          `;
+          entriesDiv.appendChild(entry);
+        });
+      });
+  </script>
 </body>
 </html>
