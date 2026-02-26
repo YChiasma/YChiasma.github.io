@@ -198,7 +198,7 @@ db.collection("logs").doc(logId)
             lastProcessedDate = date;
             const dateHeader = document.createElement("h3");
             dateHeader.textContent = date;
-            entriesDiv.appendChild(dateHeader);
+            entries.appendChild(dateHeader);
           }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
