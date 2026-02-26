@@ -145,7 +145,8 @@ addEntry.onclick=async()=>{
    .add({
      text:text,
      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-     lastEdited:firebase.firestore.FieldValue.serverTimestamp()
+     lastEdited:firebase.firestore.FieldValue.serverTimestamp(),
+     edited:false
    });
 
  await ref.collection("versions").add({
@@ -170,7 +171,8 @@ async function editEntry(id,current){
 
  await ref.update({
    text:t,
-   lastEdited:firebase.firestore.FieldValue.serverTimestamp()
+   lastEdited:firebase.firestore.FieldValue.serverTimestamp(),
+   edited:true
  });
 }
 
