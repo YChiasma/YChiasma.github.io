@@ -176,7 +176,7 @@ async function editEntry(id,current){
 // ---------------- Listener ----------------
 db.collection("logs").doc(logId)
 .collection("entries")
-.orderBy("timestamp","asc")
+.orderBy("timestamp","desc")
 .onSnapshot(snap=>{
 
  entries.innerHTML="";
@@ -186,6 +186,33 @@ db.collection("logs").doc(logId)
    const entryDiv=document.createElement("div");
    entryDiv.className="entry";
 
+   // BEGIN OLD CODE
+   const data = doc.data();
+          const entry = document.createElement("div");
+          entry.className = "entry";
+
+          const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
+          const date = data.timestamp?.toDate?.().toDateString();
+          if(null == lastProcessedDate) {
+            lastProcessedDate = date;
+          }
+          else if(date != lastProcessedDate) {
+            lastProcessedDate = date;
+            const dateHeader = document.createElement("h3");
+            dateHeader.textContent = date;
+            entriesDiv.appendChild(dateHeader);
+          }
+          entry.innerHTML = `
+            <div class="timestamp">${time}</div>
+            <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
+       <button>Edit</button>
+          `;
+     entryDiv.querySelector("button").onclick=
+       ()=>editEntry(doc.id,latest.text);
+
+          entriesDiv.appendChild(entry);
+   // END OLD CODE
+   /* TODO: Get the versions when user clicks "View history" (may need to add "edited" boolean to entries)
    const versionsRef=doc.ref.collection("versions").orderBy("timestamp","asc");
 
    versionsRef.onSnapshot(vsnap=>{
@@ -246,8 +273,8 @@ db.collection("logs").doc(logId)
        };
      }
 
-     entries.prepend(entryDiv);
-   });
+     entries.appendChild(entryDiv);
+   });*/
  });
 });
 </script>
