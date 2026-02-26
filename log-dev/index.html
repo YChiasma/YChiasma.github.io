@@ -59,6 +59,14 @@
       border-radius: 6px;
       word-wrap: break-word;
     }
+    .editButton {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+      position: fixed;
+      top: 0px;
+      right: 0px;
+    }
 </style>
 </head>
 <body>
@@ -206,13 +214,13 @@ db.collection("logs").doc(logId)
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
             <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
-       <button>Edit</button>
+       <span class="editButton">Edit</span>
           `;
      entry.querySelector("button").onclick=
        ()=>editEntry(doc.id,data.text);
 
           if(data.edited) {
-            const versionsRef=doc.ref.collection("versions").orderBy("timestamp","asc");
+            const versionsRef=doc.ref.collection("versions").orderBy("timestamp","desc");
 
             versionsRef.onSnapshot(vsnap=>{
 const label=document.createElement("div");
