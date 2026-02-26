@@ -211,6 +211,36 @@ db.collection("logs").doc(logId)
      entry.querySelector("button").onclick=
        ()=>editEntry(doc.id,data.text);
 
+          if(data.edited) {
+            const versionsRef=doc.ref.collection("versions").orderBy("timestamp","asc");
+
+            versionsRef.onSnapshot(vsnap=>{
+const label=document.createElement("div");
+       label.className="editLabel";
+       label.textContent="View history";
+       entry.appendChild(label);
+
+       const box=document.createElement("div");
+       box.className="historyBox";
+       box.style.display="none";
+
+       vsnap.docs.forEach(d=>{
+         const v=d.data();
+         const t=v.timestamp?.toDate()?.toLocaleString();
+         box.innerHTML+=`<b>${t}</b><br>${v.text}<hr>`;
+       });
+
+       entryDiv.appendChild(box);
+
+       label.onclick=()=>{
+         box.style.display=
+           box.style.display==="none"?"block":"none";
+       };
+
+            });
+
+          }
+
           entries.appendChild(entry);
    // END OLD CODE
    /* TODO: Get the versions when user clicks "View history" (may need to add "edited" boolean to entries)
