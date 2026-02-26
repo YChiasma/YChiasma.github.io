@@ -181,13 +181,13 @@ db.collection("logs").doc(logId)
 
  entries.innerHTML="";
  let lastDate=null;
+   let lastProcessedDate = null;
 
  snap.forEach(doc=>{
    const entryDiv=document.createElement("div");
    entryDiv.className="entry";
 
    // BEGIN OLD CODE
-   let lastProcessedDate = null;
    const data = doc.data();
           const entry = document.createElement("div");
           entry.className = "entry";
