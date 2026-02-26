@@ -187,17 +187,14 @@ db.collection("logs").doc(logId)
    entryDiv.className="entry";
 
    // BEGIN OLD CODE
-   lastProcessedDate = lastDate;
+   let lastProcessedDate = null;
    const data = doc.data();
           const entry = document.createElement("div");
           entry.className = "entry";
 
           const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
           const date = data.timestamp?.toDate?.().toDateString();
-          if(null == lastProcessedDate) {
-            lastProcessedDate = date;
-          }
-          else if(date != lastProcessedDate) {
+          if(date != lastProcessedDate) {
             lastProcessedDate = date;
             const dateHeader = document.createElement("h3");
             dateHeader.textContent = date;
