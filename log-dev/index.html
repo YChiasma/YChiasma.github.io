@@ -66,6 +66,7 @@
       position: fixed;
       top: 0px;
       right: 0px;
+      text-decoration: underline;
     }
 </style>
 </head>
@@ -216,7 +217,7 @@ db.collection("logs").doc(logId)
             <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
        <span class="editButton">Edit</span>
           `;
-     entry.querySelector("button").onclick=
+     entry.querySelector(".editButton").onclick=
        ()=>editEntry(doc.id,data.text);
 
           if(data.edited) {
