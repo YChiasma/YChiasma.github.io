@@ -169,6 +169,7 @@ async function editEntry(id,current){
  });
 
  await ref.update({
+   text:t,
    lastEdited:firebase.firestore.FieldValue.serverTimestamp()
  });
 }
