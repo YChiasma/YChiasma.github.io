@@ -187,6 +187,7 @@ db.collection("logs").doc(logId)
    entryDiv.className="entry";
 
    // BEGIN OLD CODE
+   lastProcessedDate = lastDate;
    const data = doc.data();
           const entry = document.createElement("div");
           entry.className = "entry";
