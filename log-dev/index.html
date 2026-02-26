@@ -208,7 +208,7 @@ db.collection("logs").doc(logId)
             <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
        <button>Edit</button>
           `;
-     entryDiv.querySelector("button").onclick=
+     entry.querySelector("button").onclick=
        ()=>editEntry(doc.id,latest.text);
 
           entriesDiv.appendChild(entry);
