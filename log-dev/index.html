@@ -85,10 +85,11 @@
       cursor: pointer;
     }
 
-    .editLabel {
+    .viewHistory {
       cursor: pointer;
       font-size: 0.8rem;
       color: #666;
+      margin-bottom: 0.5rem;
     }
     .entryContent {
       margin-bottom: 0.5rem;
@@ -250,7 +251,7 @@
 
             versionsRef.onSnapshot(vsnap => {
               const label = document.createElement("div");
-              label.className = "editLabel";
+              label.className = "viewHistory";
               label.textContent = "View history";
               entry.appendChild(label);
 
