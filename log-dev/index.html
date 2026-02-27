@@ -90,6 +90,9 @@
       font-size: 0.8rem;
       color: #666;
     }
+    .entryContent {
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 
@@ -236,7 +239,7 @@
           }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
-            <div>${data.text.replaceAll("\n", "\n<br>\n")}</div>
+            <div class="entryContent">${data.text.replaceAll("\n", "\n<br>\n")}</div>
             <span class="editButton">Edit</span>
           `;
           entry.querySelector(".editButton").onclick =
