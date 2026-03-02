@@ -365,7 +365,7 @@ function modalPrompt(title, defaultValue=""){
               vsnap.docs.forEach(d => {
                 const v = d.data();
                 const t = v.timestamp?.toDate()?.toLocaleString();
-                box.innerHTML += `<b>${t}</b><br>${v.text}<hr>`;
+                box.innerHTML += `<b>${t}</b><br>${v.text.replaceAll("\n", "\n<br>\n")}<hr>`;
               });
 
               entry.appendChild(box);
