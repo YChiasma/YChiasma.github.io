@@ -210,6 +210,11 @@ function modalPrompt(title, defaultValue=""){
 }
 </script>
   <script>
+function escapeHTML(s){
+  return s.replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])
+  );
+}
     // ---------------- Firebase ----------------
     const firebaseConfig = {
       apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
@@ -299,7 +304,7 @@ function modalPrompt(title, defaultValue=""){
     // ---------------- Edit Entry ----------------
     async function editEntry(id, current) {
       const t = await modalPrompt("Edit entry:", current);
-      if (!t || t === current) return;
+      if (t === null || t === current) return;
 
       const ref = db.collection("logs").doc(logId).collection("entries").doc(id);
 
@@ -326,9 +331,6 @@ function modalPrompt(title, defaultValue=""){
         let lastProcessedDate = null;
 
         snap.forEach(doc => {
-          const entryDiv = document.createElement("div");
-          entryDiv.className = "entry";
-
           const data = doc.data();
           const entry = document.createElement("div");
           entry.className = "entry";
@@ -343,7 +345,7 @@ function modalPrompt(title, defaultValue=""){
           }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
-            <div class="entryContent">${data.text.replaceAll("\n", "\n<br>\n")}</div>
+            <div class="entryContent">${escapeHTML(data.text).replaceAll("\n", "\n<br>\n")}</div>
             <span class="editButton">Edit</span>
           `;
           entry.querySelector(".editButton").onclick =
@@ -365,7 +367,7 @@ function modalPrompt(title, defaultValue=""){
               vsnap.docs.forEach(d => {
                 const v = d.data();
                 const t = v.timestamp?.toDate()?.toLocaleString();
-                box.innerHTML += `<b>${t}</b><br>${v.text.replaceAll("\n", "\n<br>\n")}<hr>`;
+                box.innerHTML += `<b>${t}</b><br>${escapeHTML(v.text).replaceAll("\n", "\n<br>\n")}<hr>`;
               });
 
               entry.appendChild(box);
