@@ -7,7 +7,7 @@
     return match ? decodeURIComponent(match[2]) : null;
   }
 
-  function setCookie(name, value, days, sameSite="Strict") {
+  function setCookie(name, value, days, sameSite="Strict", secure = location.protocol === "https:") {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
 
     let cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=${sameSite}`;
