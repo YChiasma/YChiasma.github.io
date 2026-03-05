@@ -91,62 +91,63 @@
       color: #666;
       margin-bottom: 0.5rem;
     }
+
     .entryContent {
       margin-bottom: 0.5rem;
     }
   </style>
-<style>
-.modalOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
+  <style>
+    .modalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
 
-.modalBox{
-  background:#fff;
-  padding:16px;
-  border-radius:12px;
-  width:min(500px,90%);
-  box-shadow:0 10px 25px rgba(0,0,0,.25);
-  font-family:sans-serif;
-}
+    .modalBox {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      width: min(500px, 90%);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .25);
+      font-family: sans-serif;
+    }
 
-.modalBox h3{
-  margin-top:0;
-  font-size:18px;
-}
+    .modalBox h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
 
-.modalBox textarea{
-  width:100%;
-  height:140px;
-  resize:vertical;
-  margin:8px 0 12px;
-  padding:8px;
-  font-size:14px;
-}
+    .modalBox textarea {
+      width: 100%;
+      height: 140px;
+      resize: vertical;
+      margin: 8px 0 12px;
+      padding: 8px;
+      font-size: 14px;
+    }
 
-.modalButtons{
-  text-align:right;
-}
+    .modalButtons {
+      text-align: right;
+    }
 
-.modalButtons button{
-  margin-left:8px;
-  padding:6px 12px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  cursor:pointer;
-}
+    .modalButtons button {
+      margin-left: 8px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
 
-.modalButtons button.primary{
-  background:#2d7ef7;
-  color:white;
-  border:none;
-}
-</style>
+    .modalButtons button.primary {
+      background: #2d7ef7;
+      color: white;
+      border: none;
+    }
+  </style>
 
 
 </head>
@@ -160,17 +161,17 @@
   <button id="addEntry">Add Entry</button>
   <div id="entries"></div>
 
-<script>
-function modalPrompt(title, defaultValue=""){
-  return new Promise(resolve=>{
+  <script>
+    function modalPrompt(title, defaultValue = "") {
+      return new Promise(resolve => {
 
-    const overlay=document.createElement("div");
-    overlay.className="modalOverlay";
+        const overlay = document.createElement("div");
+        overlay.className = "modalOverlay";
 
-    const box=document.createElement("div");
-    box.className="modalBox";
+        const box = document.createElement("div");
+        box.className = "modalBox";
 
-    box.innerHTML=`
+        box.innerHTML = `
       <h3>${title}</h3>
       <textarea></textarea>
       <div class="modalButtons">
@@ -179,37 +180,68 @@ function modalPrompt(title, defaultValue=""){
       </div>
     `;
 
-    const textarea=box.querySelector("textarea");
-    textarea.value=defaultValue;
-    textarea.focus();
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        const textarea = box.querySelector("textarea");
+        textarea.value = defaultValue;
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
 
-    const cleanup=(value)=>{
-      document.body.removeChild(overlay);
-      resolve(value);
-    };
+        const cleanup = (value) => {
+          document.body.removeChild(overlay);
+          resolve(value);
+        };
 
-    box.querySelector(".cancel").onclick=()=>cleanup(null);
-    box.querySelector(".save").onclick=()=>cleanup(textarea.value);
+        box.querySelector(".cancel").onclick = () => cleanup(null);
+        box.querySelector(".save").onclick = () => cleanup(textarea.value);
 
-    overlay.onclick=e=>{
-      if(e.target===overlay) cleanup(null);
-    };
+        overlay.onclick = e => {
+          if (e.target === overlay) cleanup(null);
+        };
 
-    textarea.onkeydown=e=>{
-      if(e.key==="Escape") cleanup(null);
-      if(e.key==="Enter" && (e.ctrlKey||e.metaKey)){
-        e.preventDefault();
-        cleanup(textarea.value);
-      }
-    };
+        textarea.onkeydown = e => {
+          if (e.key === "Escape") cleanup(null);
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            cleanup(textarea.value);
+          }
+        };
 
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-  });
-}
-</script>
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+      });
+    }
+  </script>
   <script>
+    function escapeHTML(s) {
+      return s.replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+      );
+    }
+
+    function renderWithCheckboxes(text, entryId) {
+
+      const lines = text.split("\n");
+
+      return lines.map((line, i) => {
+
+        const match = line.match(/^\[( |x)\]\s?(.*)$/i);
+
+        if (!match)
+          return escapeHTML(line);
+
+        const checked = match[1].toLowerCase() === "x";
+        const label = escapeHTML(match[2]);
+
+        return `
+      <label>
+        <input type="checkbox"
+          data-entry="${entryId}"
+          data-line="${i}"
+          ${checked ? "checked" : ""}>
+        ${label}
+      </label>
+    `;
+      }).join("<br>");
+    }
     // ---------------- Firebase ----------------
     const firebaseConfig = {
       apiKey: "AIzaSyCHtCUt14sSxNn7IUQeKmp704pi2l7U8ZE",
@@ -299,7 +331,7 @@ function modalPrompt(title, defaultValue=""){
     // ---------------- Edit Entry ----------------
     async function editEntry(id, current) {
       const t = await modalPrompt("Edit entry:", current);
-      if (!t || t === current) return;
+      if (t === null || t === current) return;
 
       const ref = db.collection("logs").doc(logId).collection("entries").doc(id);
 
@@ -326,9 +358,6 @@ function modalPrompt(title, defaultValue=""){
         let lastProcessedDate = null;
 
         snap.forEach(doc => {
-          const entryDiv = document.createElement("div");
-          entryDiv.className = "entry";
-
           const data = doc.data();
           const entry = document.createElement("div");
           entry.className = "entry";
@@ -343,7 +372,7 @@ function modalPrompt(title, defaultValue=""){
           }
           entry.innerHTML = `
             <div class="timestamp">${time}</div>
-            <div class="entryContent">${data.text.replaceAll("\n", "\n<br>\n")}</div>
+            <div class="entryContent">${renderWithCheckboxes(data.text, doc.id)}</div>
             <span class="editButton">Edit</span>
           `;
           entry.querySelector(".editButton").onclick =
@@ -365,7 +394,7 @@ function modalPrompt(title, defaultValue=""){
               vsnap.docs.forEach(d => {
                 const v = d.data();
                 const t = v.timestamp?.toDate()?.toLocaleString();
-                box.innerHTML += `<b>${t}</b><br>${v.text}<hr>`;
+                box.innerHTML += `<b>${t}</b><br>${escapeHTML(v.text).replaceAll("\n", "\n<br>\n")}<hr>`;
               });
 
               entry.appendChild(box);
@@ -382,6 +411,48 @@ function modalPrompt(title, defaultValue=""){
           entries.appendChild(entry);
         });
       });
+
+    document.addEventListener("change", async e => {
+      if (e.target.type !== "checkbox") return;
+
+      const entryId = e.target.dataset.entry;
+      const lineIndex = Number(e.target.dataset.line);
+
+      const ref = db.collection("logs")
+        .doc(logId)
+        .collection("entries")
+        .doc(entryId);
+
+      const snap = await ref.get();
+      const data = snap.data();
+
+      const lines = data.text.split("\n");
+
+      const line = lines[lineIndex];
+
+      if (!line) return;
+
+      // toggle [ ] ↔ [x]
+      lines[lineIndex] =
+        line.startsWith("[x]")
+          ? line.replace(/^\[x\]/i, "[ ]")
+          : line.replace(/^\[ \]/, "[x]");
+
+      const newText = lines.join("\n");
+
+      // save version
+      await ref.collection("versions").add({
+        text: newText,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // update main doc
+      await ref.update({
+        text: newText,
+        edited: true,
+        lastEdited: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
   </script>
 </body>
 
