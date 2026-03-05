@@ -131,7 +131,7 @@ document.getElementById("guestMode").addEventListener("click", () => {
     adminKeyWarning.style.color = "red";
     adminKeyWarning.style.textDecoration = "bold";
     adminKeyWarning.textContent = "Warning: Copy this adminKey or you might lose access to your streaks.";
-    adminKeyForm.appendChild();
+    adminKeyForm.appendChild(adminKeyWarning);
   }
   adminKeyInput.value = adminKey;
   adminKeyInput.size = adminKey.length;
