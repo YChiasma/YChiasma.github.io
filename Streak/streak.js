@@ -130,18 +130,13 @@ document.getElementById("guestMode").addEventListener("click", () => {
     const adminKeyWarning = document.createElement("span");
     adminKeyWarning.style.color = "red";
     adminKeyWarning.style.textDecoration = "bold";
-    adminKeyWarning.textContent = "Warning: Copy this adminKey or you might lose access to your streaks.";
+    adminKeyWarning.textContent = "Warning: Save this adminKey or you might lose access to your streaks.";
     adminKeyForm.appendChild(adminKeyWarning);
   }
   adminKeyInput.value = adminKey;
   adminKeyInput.size = adminKey.length;
-  return; // TODO : Remove modal stuff after testing adminKey sufficiently
-  // TODO : alert user when new adminKey is created so that they know they need to save or bookmark it
-  createModal({
-    title: "Admin Key (Use the same Admin Key to identify you as the owner of your streaks)",
-    buttonText: "Login as guest",
-    onSubmit: (value) => alert("You entered: " + value)
-  });
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('logoutBtn').style.display='inline-block';
 });
 
 function markDone() {
