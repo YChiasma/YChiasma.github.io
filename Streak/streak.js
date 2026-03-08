@@ -137,6 +137,7 @@ document.getElementById("guestMode").addEventListener("click", () => {
   adminKeyInput.size = adminKey.length;
   document.getElementById('loginForm').style.display='none';
   document.getElementById('logoutBtn').style.display='inline-block';
+  authenticate({uid: adminKey});
 });
 
 function markDone() {
@@ -383,7 +384,7 @@ if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
 
     let publicMode = false;
 
-    onAuthStateChanged(auth, async (user)=>{
+async function authenticate(user) {
       if(publicStreak) setCurrentStreakName(publicStreak);
 const loginFormDisplay = document.getElementById('loginForm').style.display;
       if(user){
@@ -419,7 +420,8 @@ if (publicUser && publicStreak) {
         document.getElementById('logoutBtn').style.display='none';
         document.getElementById('email').focus();
       }
-    });
+    }
+    onAuthStateChanged(auth, authenticate);
 
     function setCurrentStreakName(newStreakName) {
       currentStreakName = newStreakName;
