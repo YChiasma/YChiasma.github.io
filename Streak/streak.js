@@ -17,6 +17,14 @@
     document.cookie = cookie;
   }
 
+function getOwnerRoot() {
+  if (auth.currentUser) {
+    return ["users", auth.currentUser.uid];
+  } else {
+    return ["guests", adminKey];
+  }
+}
+
 function getOrCreateAdminKey(options = {}) {
   const {
     name = "adminKey",
