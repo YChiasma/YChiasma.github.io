@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isUserOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isGuestOwner(adminKey) {
+      return request.auth == null &&
+             request.resource.data.adminKey == adminKey;
+    }
+
+    function isExistingGuestOwner(adminKey) {
+      return request.auth == null &&
+             resource.data.adminKey == adminKey;
+    }
+
+    // AUTHENTICATED USERS
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if isUserOwner(uid);
+    }
+
+    match /users/{uid}/streaks/{streakId} {
+      allow read: if resource.data.public == true
+                  || isUserOwner(uid);
+
+      allow write: if isUserOwner(uid);
+    }
+
+    match /users/{uid}/streaks/{streakId}/days/{dayId} {
+      allow read: if
+        get(/databases/$(database)/documents/users/$(uid)/streaks/$(streakId)).data.public == true
+        || isUserOwner(uid);
+
+      allow write: if isUserOwner(uid);
+    }
+
+    // GUEST USERS
+    match /guests/{adminKey} {
+      allow read: if false;
+      allow write: if isGuestOwner(adminKey);
+    }
+
+    match /guests/{adminKey}/streaks/{streakId} {
+
+      allow read: if resource.data.public == true
+                  || isExistingGuestOwner(adminKey);
+
+      allow create: if isGuestOwner(adminKey);
+
+      allow update, delete: if isExistingGuestOwner(adminKey)
+                            && request.resource.data.adminKey == resource.data.adminKey;
+    }
+
+    match /guests/{adminKey}/streaks/{streakId}/days/{dayId} {
+
+      allow read: if
+        get(/databases/$(database)/documents/guests/$(adminKey)/streaks/$(streakId)).data.public == true
+        || isExistingGuestOwner(adminKey);
+
+      allow write: if isExistingGuestOwner(adminKey);
+    }
+  }
+}
