@@ -167,7 +167,7 @@ if(publicStreak) setCurrentStreakName(publicStreak);
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { linkWithCredential, signInAnonymously, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
@@ -405,6 +405,7 @@ const loginFormDisplay = document.getElementById('loginForm').style.display;
 await loadStreakList();
 await loadStreak(currentStreakName);
       } else {
+        await signInAnonymously(auth);
         userId=null;
 
  publicMode = false;
