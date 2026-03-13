@@ -406,7 +406,7 @@ await loadStreakList();
 await loadStreak(currentStreakName);
       } else {
         await signInAnonymously(auth);
-        userId=null;
+        userId=auth.currentUser.uid;
 
  publicMode = false;
 
@@ -427,7 +427,9 @@ if (publicUser && publicStreak) {
 
         document.getElementById('loginForm').style.display=loginFormDisplay;
         document.getElementById('logoutBtn').style.display='none';
-        document.getElementById('email').focus();
+        if("none" != loginFormDisplay) {
+          document.getElementById('email').focus();
+        }
       }
     }
     onAuthStateChanged(auth, authenticate);
