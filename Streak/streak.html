@@ -283,6 +283,11 @@
   animation: pillPulse 1.5s infinite;
 }
 
+#guestModeMsg {
+  display:none;
+  font-color: yellow;
+}
+
 
   </style>
 </head>
@@ -293,6 +298,8 @@
       <input type="password" id="password" placeholder="Password" required />
       <button type="submit" class="btn primary">Login</button>
     </form>
+
+    <div id="guestModeMsg">You are signed in using Guest Mode.</div>
 
     <header>
       <div class="title">

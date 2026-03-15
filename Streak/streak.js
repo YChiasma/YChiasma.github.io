@@ -14,7 +14,7 @@ function getOwnerRoot() {
 function markDone() {
   const date = uidDate(new Date());
   isDone(date).then(x => {
-   if(!x) toggleDay(date);
+    if (!x) toggleDay(date);
   });
 }
 
@@ -26,28 +26,28 @@ const publicStreak = urlParams.get("streak");
 
 let currentStreakName = "default"; // or "Running", "Meditation", etc.
 
-if(publicStreak) setCurrentStreakName(publicStreak);
+if (publicStreak) setCurrentStreakName(publicStreak);
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { linkWithCredential, signInAnonymously, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { linkWithCredential, signInAnonymously, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
-      authDomain: "streak-eda1a.firebaseapp.com",
-      projectId: "streak-eda1a",
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
+  authDomain: "streak-eda1a.firebaseapp.com",
+  projectId: "streak-eda1a",
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-    // Ensure user stays logged in across tabs/pages
-    await setPersistence(auth, browserLocalPersistence);
+// Ensure user stays logged in across tabs/pages
+await setPersistence(auth, browserLocalPersistence);
 
-    let userId = null;
-    let cache = {};
-    let prevStats = {current:0,longest:0,total:0};
+let userId = null;
+let cache = {};
+let prevStats = { current: 0, longest: 0, total: 0 };
 
 async function loadPublicStreak(uid, streakName) {
   const streakDocRef = doc(db, "users", uid, "streaks", streakName);
@@ -65,258 +65,267 @@ async function loadPublicStreak(uid, streakName) {
   setView(today.getFullYear(), today.getMonth());
 }
 
-    function uidDate(d){
-      const y=d.getFullYear(); const m=(d.getMonth()+1).toString().padStart(2,'0'); const day=d.getDate().toString().padStart(2,'0');
-      return `${y}-${m}-${day}`;
-    }
-
-    let viewYear, viewMonth;
-
-    function setView(y,m){ viewYear=y; viewMonth=m; loadMonthRange(y,m);
-const isToday =
-  viewYear === new Date().getFullYear() &&
-  viewMonth === new Date().getMonth();
-
-const sticky = document.getElementById('stickyToday');
-if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
- }
-
-    function getMonthInfo(y,m){
-      const first=new Date(y,m,1); const last=new Date(y,m+1,0);
-      return {firstDayIndex:first.getDay(), days:last.getDate()}
-    }
-
-    function streakRef(dateStr) {
-      if(!userId) userId = publicUser;
-      if(!currentStreakName) setCurrentStreakName(publicStreak);
-      return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
-    }
-
-    async function isDone(dateStr){ if(dateStr in cache) return cache[dateStr];
-      const snap = await getDoc(streakRef(dateStr));
-      cache[dateStr] = snap.exists();
-      return cache[dateStr];
-    }
-
-    async function toggleDay(dateStr){
-      if(await isDone(dateStr)){
-        await deleteDoc(streakRef(dateStr));
-        cache[dateStr]=false;
-      } else {
-        await setDoc(streakRef(dateStr), {done:true, ts:Date.now()});
-        cache[dateStr]=true;
-      }
-      render();
-    }
-
-    function animateNumber(el, from, to, duration=500){
-      const start = performance.now();
-      const easeOutCubic = t => 1 - Math.pow(1-t,3);
-      function step(time){
-        let t = Math.min((time-start)/duration,1);
-        el.textContent = Math.floor(from + (to-from)*easeOutCubic(t));
-        if(t<1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-
-    async function render(){
-      if(!userId && !publicMode) return;
-      const daysGrid=document.getElementById('daysGrid');
-      const {firstDayIndex, days}=getMonthInfo(viewYear, viewMonth);
-      const monName=new Date(viewYear,viewMonth,1).toLocaleString(undefined,{month:'long',year:'numeric'});
-      document.getElementById('monthTitle').textContent=monName;
-      document.getElementById('rangeLabel').textContent=`Viewing ${monName}`;
-      daysGrid.innerHTML='';
-      for(let i=0;i<firstDayIndex;i++){
-        const el=document.createElement('div'); el.className='day inactive'; daysGrid.appendChild(el);
-      }
-      for(let d=1;d<=days;d++){
-        const date=new Date(viewYear,viewMonth,d); const id=uidDate(date);
-        const el=document.createElement('button'); el.className='day'; el.innerHTML=`<div class="n">${d}</div>`;
-        if(cache[id]) el.setAttribute('data-state','done');
-        el.addEventListener('click', async () => {
-  const done = !!cache[id];
-
-  if (window.innerWidth <= 720) {
-    openSheet({
-      streakName: currentStreakDisplayName || currentStreakName,
-      dateStr: id,
-      done
-    });
-  } else {
-    toggleDay(id);
-  }
-});
-        daysGrid.appendChild(el);
-      if (
-        date.getFullYear() === new Date().getFullYear() &&
-        date.getMonth() === new Date().getMonth() &&
-        d === new Date().getDate()
-      ) {
-        el.dataset.today = "true";
-      }
-      }
-      daysGrid.classList.remove('fadeInUp');
-      void daysGrid.offsetWidth;
-      daysGrid.classList.add('fadeInUp');
-      updateStats();
-      document.getElementById('loadingOverlay').style.display='none';
-      highlightToday();
-
-      renderSummaryPill();
-
-    }
-
-    function updateStats(){
-      const keys=Object.keys(cache).filter(k=>cache[k]).sort();
-      const total = keys.length;
-      let longest=0, running=0, prev=null;
-      for(const k of keys){
-        const [y,m,d]=k.split('-').map(Number);
-        const dt=new Date(y,m-1,d);
-        if(!prev) running=1; else{
-          const diff=(dt-prev)/(1000*60*60*24);
-          if(diff===1) running++; else running=1;
-        }
-        if(running>longest) longest=running;
-        prev=dt;
-      }
-      let cur=0; let t=new Date();
-      while(true){ const k=uidDate(t); if(cache[k]){cur++; t.setDate(t.getDate()-1);} else break; }
-      const panel=document.getElementById('statsPanel');
-      panel.classList.remove('fadeInUp');
-      void panel.offsetWidth;
-      panel.classList.add('fadeInUp');
-      animateNumber(document.getElementById('currentStreak'), prevStats.current, cur);
-      animateNumber(document.getElementById('longestStreak'), prevStats.longest, longest);
-      animateNumber(document.getElementById('totalMarked'), prevStats.total, total);
-      prevStats={current:cur,longest:longest,total:total};
-    }
-
-    async function loadMonthRange(y,m){
-      if(!userId && !publicMode) return;
-      document.getElementById('loadingOverlay').style.display='flex';
-      const start=new Date(y,m-1,1);
-      const end=new Date(y,m+2,0);
-      let streaksCol = null;
-      if(!publicMode)
-        streaksCol = collection(db, "users", userId, "streaks", currentStreakName, "days");
-      else
-        streaksCol = collection(db, "users", publicUser, "streaks", publicStreak, "days");
-      const q=query(
-        streaksCol,
-        where("ts", ">=", start.getTime()),
-        where("ts", "<=", end.getTime())
-      );
-      const snaps=await getDocs(q);
-      snaps.forEach(docSnap=>{
-        if(docSnap.exists()){
-          cache[docSnap.id] = true;
-        }
-      });
-      render();
-    }
-
-    function highlightToday(){
-      const today = new Date();
-      if(today.getFullYear()!==viewYear || today.getMonth()!==viewMonth) return;
-      const id = uidDate(today);
-      const days = document.querySelectorAll('#daysGrid .day');
-      days.forEach(day=>{
-        if(day.textContent==today.getDate().toString()){
-          day.classList.add('pulse');
-          day.scrollIntoView({behavior:'smooth', block:'center'});
-          setTimeout(()=>day.classList.remove('pulse'),400);
-        }
-      });
-    }
-
-    document.getElementById('prevMonth').addEventListener('click',()=>{const dt=new Date(viewYear,viewMonth-1,1); setView(dt.getFullYear(),dt.getMonth());});
-    document.getElementById('nextMonth').addEventListener('click',()=>{const dt=new Date(viewYear,viewMonth+1,1); setView(dt.getFullYear(),dt.getMonth());});
-    document.getElementById('todayBtn').addEventListener('click',()=>{const t=new Date(); setView(t.getFullYear(),t.getMonth());});
-    document.getElementById('clearBtn').addEventListener('click',async()=>{if(confirm('Clear all streaks?')){for(const k of Object.keys(cache)){if(cache[k]){await deleteDoc(streakRef(k)); cache[k]=false;}} render();}});
-
-    document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-      await signOut(auth);
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const email=document.getElementById('email').value;
-      const password=document.getElementById('password').value;
-      try{
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch(err){
-        alert("Login failed: "+err.message);
-        document.getElementById('password').focus();
-      }
-    });
-
-    let publicMode = false;
-
-async function authenticate(user) {
-      if(publicStreak) setCurrentStreakName(publicStreak);
-const loginFormDisplay = document.getElementById('loginForm').style.display;
-      if(user){
-        userId=user.uid;
-        if(publicUser && publicStreak && publicUser != userId) publicMode = true;
-        document.getElementById('loginForm').style.display='none';
-        document.getElementById('logoutBtn').style.display='inline-block';
-        const t=new Date();
-        setView(t.getFullYear(), t.getMonth());
-await loadStreakList();
-await loadStreak(currentStreakName);
-      } else {
-        await signInAnonymously(auth);
-        userId=auth.currentUser.uid;
-
- publicMode = false;
-
-if (publicUser && publicStreak) {
-  // Public view mode
-  publicMode = true;
-  document.getElementById("loginForm").style.display = "none";
-  document.getElementById("logoutBtn").style.display = "none";
-  document.getElementById("clearBtn").style.display = "none";
-  document.getElementById("todayBtn").style.display = "none";
-  document.getElementById("publicToggle").disabled = true;
-  document.getElementById("shareLinkBtn").style.display = "none";
-
-  loadPublicStreak(publicUser, publicStreak);
+function uidDate(d) {
+  const y = d.getFullYear(); const m = (d.getMonth() + 1).toString().padStart(2, '0'); const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
+let viewYear, viewMonth;
 
+function setView(y, m) {
+  viewYear = y; viewMonth = m; loadMonthRange(y, m);
+  const isToday =
+    viewYear === new Date().getFullYear() &&
+    viewMonth === new Date().getMonth();
 
-        document.getElementById('loginForm').style.display=loginFormDisplay;
-        document.getElementById('logoutBtn').style.display='none';
-        if("none" != loginFormDisplay) {
-          document.getElementById('email').focus();
+  const sticky = document.getElementById('stickyToday');
+  if (sticky) sticky.style.opacity = isToday ? '0.4' : '1';
+}
+
+function getMonthInfo(y, m) {
+  const first = new Date(y, m, 1); const last = new Date(y, m + 1, 0);
+  return { firstDayIndex: first.getDay(), days: last.getDate() }
+}
+
+function streakRef(dateStr) {
+  if (!userId) userId = publicUser;
+  if (!currentStreakName) setCurrentStreakName(publicStreak);
+  return doc(db, "users", userId, "streaks", currentStreakName, "days", dateStr);
+}
+
+async function isDone(dateStr) {
+  if (dateStr in cache) return cache[dateStr];
+  const snap = await getDoc(streakRef(dateStr));
+  cache[dateStr] = snap.exists();
+  return cache[dateStr];
+}
+
+async function toggleDay(dateStr) {
+  if (await isDone(dateStr)) {
+    await deleteDoc(streakRef(dateStr));
+    cache[dateStr] = false;
+  } else {
+    await setDoc(streakRef(dateStr), { done: true, ts: Date.now() });
+    cache[dateStr] = true;
+  }
+  render();
+}
+
+function animateNumber(el, from, to, duration = 500) {
+  const start = performance.now();
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  function step(time) {
+    let t = Math.min((time - start) / duration, 1);
+    el.textContent = Math.floor(from + (to - from) * easeOutCubic(t));
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+async function render() {
+  if (!userId && !publicMode) return;
+  const daysGrid = document.getElementById('daysGrid');
+  const { firstDayIndex, days } = getMonthInfo(viewYear, viewMonth);
+  const monName = new Date(viewYear, viewMonth, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
+  document.getElementById('monthTitle').textContent = monName;
+  document.getElementById('rangeLabel').textContent = `Viewing ${monName}`;
+  daysGrid.innerHTML = '';
+  for (let i = 0; i < firstDayIndex; i++) {
+    const el = document.createElement('div'); el.className = 'day inactive'; daysGrid.appendChild(el);
+  }
+  for (let d = 1; d <= days; d++) {
+    const date = new Date(viewYear, viewMonth, d); const id = uidDate(date);
+    const el = document.createElement('button'); el.className = 'day'; el.innerHTML = `<div class="n">${d}</div>`;
+    if (cache[id]) el.setAttribute('data-state', 'done');
+    if (!publicMode) {
+      el.addEventListener('click', async () => {
+        const done = !!cache[id];
+
+        if (window.innerWidth <= 720) {
+          openSheet({
+            streakName: currentStreakDisplayName || currentStreakName,
+            dateStr: id,
+            done
+          });
+        } else {
+          toggleDay(id);
         }
-      }
+      });
     }
-    onAuthStateChanged(auth, authenticate);
+    daysGrid.appendChild(el);
+    if (
+      date.getFullYear() === new Date().getFullYear() &&
+      date.getMonth() === new Date().getMonth() &&
+      d === new Date().getDate()
+    ) {
+      el.dataset.today = "true";
+    }
+  }
+  daysGrid.classList.remove('fadeInUp');
+  void daysGrid.offsetWidth;
+  daysGrid.classList.add('fadeInUp');
+  updateStats();
+  document.getElementById('loadingOverlay').style.display = 'none';
+  highlightToday();
 
-    function setCurrentStreakName(newStreakName) {
-      currentStreakName = newStreakName;
-      document.getElementById("streakName").value = currentStreakName;
+  renderSummaryPill();
+
+}
+
+function updateStats() {
+  const keys = Object.keys(cache).filter(k => cache[k]).sort();
+  const total = keys.length;
+  let longest = 0, running = 0, prev = null;
+  for (const k of keys) {
+    const [y, m, d] = k.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    if (!prev) running = 1; else {
+      const diff = (dt - prev) / (1000 * 60 * 60 * 24);
+      if (diff === 1) running++; else running = 1;
+    }
+    if (running > longest) longest = running;
+    prev = dt;
+  }
+  let cur = 0; let t = new Date();
+  while (true) { const k = uidDate(t); if (cache[k]) { cur++; t.setDate(t.getDate() - 1); } else break; }
+  const panel = document.getElementById('statsPanel');
+  panel.classList.remove('fadeInUp');
+  void panel.offsetWidth;
+  panel.classList.add('fadeInUp');
+  animateNumber(document.getElementById('currentStreak'), prevStats.current, cur);
+  animateNumber(document.getElementById('longestStreak'), prevStats.longest, longest);
+  animateNumber(document.getElementById('totalMarked'), prevStats.total, total);
+  prevStats = { current: cur, longest: longest, total: total };
+}
+
+async function loadMonthRange(y, m) {
+  if (!userId && !publicMode) return;
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m + 2, 0);
+  let streaksCol = null;
+  if (!publicMode)
+    streaksCol = collection(db, "users", userId, "streaks", currentStreakName, "days");
+  else
+    streaksCol = collection(db, "users", publicUser, "streaks", publicStreak, "days");
+  const q = query(
+    streaksCol,
+    where("ts", ">=", start.getTime()),
+    where("ts", "<=", end.getTime())
+  );
+  const snaps = await getDocs(q);
+  snaps.forEach(docSnap => {
+    if (docSnap.exists()) {
+      cache[docSnap.id] = true;
+    }
+  });
+  render();
+}
+
+function highlightToday() {
+  const today = new Date();
+  if (today.getFullYear() !== viewYear || today.getMonth() !== viewMonth) return;
+  const id = uidDate(today);
+  const days = document.querySelectorAll('#daysGrid .day');
+  days.forEach(day => {
+    if (day.textContent == today.getDate().toString()) {
+      day.classList.add('pulse');
+      day.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => day.classList.remove('pulse'), 400);
+    }
+  });
+}
+
+document.getElementById('prevMonth').addEventListener('click', () => { const dt = new Date(viewYear, viewMonth - 1, 1); setView(dt.getFullYear(), dt.getMonth()); });
+document.getElementById('nextMonth').addEventListener('click', () => { const dt = new Date(viewYear, viewMonth + 1, 1); setView(dt.getFullYear(), dt.getMonth()); });
+document.getElementById('todayBtn').addEventListener('click', () => { const t = new Date(); setView(t.getFullYear(), t.getMonth()); });
+document.getElementById('clearBtn').addEventListener('click', async () => { if (confirm('Clear all streaks?')) { for (const k of Object.keys(cache)) { if (cache[k]) { await deleteDoc(streakRef(k)); cache[k] = false; } } render(); } });
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert("Login failed: " + err.message);
+    document.getElementById('password').focus();
+  }
+});
+
+let publicMode = false;
+let guestMode = false;
+
+async function authenticate(user) {
+  if (publicStreak) setCurrentStreakName(publicStreak);
+  const loginFormDisplay = document.getElementById('loginForm').style.display;
+  if (user) {
+    userId = user.uid;
+    guestMode = false;
+    if (publicUser && publicStreak && publicUser != userId) publicMode = true;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    const t = new Date();
+    setView(t.getFullYear(), t.getMonth());
+    await loadStreakList();
+    await loadStreak(currentStreakName);
+  } else {
+    await signInAnonymously(auth);
+    guestMode = true;
+    userId = auth.currentUser.uid;
+    
+    document.getElementById("guestModeMsg").style.display = "inline";
+
+    publicMode = false;
+
+    if (publicUser && publicStreak) {
+      // Public view mode
+      publicMode = true;
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("clearBtn").style.display = "none";
+      document.getElementById("todayBtn").style.display = "none";
+      document.getElementById("publicToggle").disabled = true;
+      document.getElementById("shareLinkBtn").style.display = "none";
+
+      loadPublicStreak(publicUser, publicStreak);
     }
 
-    document.getElementById('streakSelect').addEventListener('change', async e => {
-      setCurrentStreakName(e.target.value);
-      cache = {};
-      const t = new Date();
-      setView(t.getFullYear(), t.getMonth());
+
+
+    document.getElementById('loginForm').style.display = loginFormDisplay;
+    document.getElementById('logoutBtn').style.display = 'none';
+    if ("none" != loginFormDisplay) {
+      document.getElementById('email').focus();
+    }
+  }
+}
+onAuthStateChanged(auth, authenticate);
+
+function setCurrentStreakName(newStreakName) {
+  currentStreakName = newStreakName;
+  document.getElementById("streakName").value = currentStreakName;
+}
+
+document.getElementById('streakSelect').addEventListener('change', async e => {
+  setCurrentStreakName(e.target.value);
+  cache = {};
+  const t = new Date();
+  setView(t.getFullYear(), t.getMonth());
 
   // update checkbox
   await syncPublicCheckbox(currentStreakName);
-    });
+});
 
 async function loadStreakList() {
   const select = document.getElementById("streakSelect");
   select.innerHTML = ""; // clear existing
 
-  if(null === userId) return;
+  if (null === userId) return;
   const streaksCol = collection(db, "users", userId, "streaks");
   const snaps = await getDocs(streaksCol);
 
@@ -329,7 +338,7 @@ async function loadStreakList() {
     opt.value = "default";
     opt.textContent = "default";
     select.appendChild(opt);
-    if(!currentStreakName) setCurrentStreakName("default");
+    if (!currentStreakName) setCurrentStreakName("default");
     return;
   }
 
@@ -343,7 +352,7 @@ async function loadStreakList() {
     select.appendChild(opt);
   });
 
-  if(!currentStreakName) {
+  if (!currentStreakName) {
     // pick first streak as active
     setCurrentStreakName(select.options[0].value);
   }
@@ -390,12 +399,12 @@ async function togglePublic(streakName, value) {
 }
 
 const publicToggle = document.getElementById("publicToggle");
-publicToggle.addEventListener("click", async () => { 
-  togglePublic(currentStreakName, publicToggle.checked); 
+publicToggle.addEventListener("click", async () => {
+  togglePublic(currentStreakName, publicToggle.checked);
 });
 
-publicToggle.addEventListener("change", async (e) => { 
- // Toggle share link visibility
+publicToggle.addEventListener("change", async (e) => {
+  // Toggle share link visibility
   document.getElementById("shareLinkBtn").style.display = e.target.checked ? "inline-block" : "none";
 });
 
@@ -438,12 +447,12 @@ async function loadStreak(streakName) {
     checkbox.checked = false;
   }
 
-const shareBtn = document.getElementById("shareLinkBtn");
-if (checkbox.checked) {
-  shareBtn.style.display = "inline-block";
-} else {
-  shareBtn.style.display = "none";
-}
+  const shareBtn = document.getElementById("shareLinkBtn");
+  if (checkbox.checked) {
+    shareBtn.style.display = "inline-block";
+  } else {
+    shareBtn.style.display = "none";
+  }
 
   // 🔹 Refresh the calendar
   const today = new Date();
