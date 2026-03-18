@@ -278,7 +278,7 @@ async function authenticate(user) {
     guestMode = true;
     userId = auth.currentUser.uid;
     
-    document.getElementById("guestModeMsg").style.display = "inline";
+    document.getElementById("guestModeMsg").style.display = "block";
 
     publicMode = false;
 
