@@ -293,6 +293,11 @@ async function authenticate(user) {
       document.getElementById("shareLinkBtn").style.display = "none";
 
       loadPublicStreak(publicUser, publicStreak);
+    } else {
+      const t = new Date();
+      setView(t.getFullYear(), t.getMonth());
+      await loadStreakList();
+      await loadStreak(currentStreakName);
     }
 
 
