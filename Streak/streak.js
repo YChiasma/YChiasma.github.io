@@ -263,7 +263,7 @@ let guestMode = false;
 async function authenticate(user) {
   if (publicStreak) setCurrentStreakName(publicStreak);
   const loginFormDisplay = document.getElementById('loginForm').style.display;
-  if (user) {
+  if (user && !auth.currentUser.isAnonymous) {
     userId = user.uid;
     guestMode = false;
     if (publicUser && publicStreak && publicUser != userId) publicMode = true;
