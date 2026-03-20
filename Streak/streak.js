@@ -2,7 +2,21 @@
 // DATA LAYER
 // =======================
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { linkWithCredential, signInAnonymously, getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 const Data = (() => {
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
+    authDomain: "streak-eda1a.firebaseapp.com",
+    projectId: "streak-eda1a",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
   function uid() {
     return auth.currentUser?.uid;
@@ -66,7 +80,8 @@ const Data = (() => {
     getMeta,
     updateMeta,
     getDays,
-    toggleDay
+    toggleDay,
+    auth
   };
 
 })();
@@ -253,7 +268,7 @@ const UI = (() => {
 // INIT
 // =======================
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(Data.auth, async (user) => {
   if (!user) return;
 
   const today = new Date();
