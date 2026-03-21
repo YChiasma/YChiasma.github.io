@@ -255,6 +255,158 @@ const UI = (() => {
     document.getElementById("renameBtn").onclick = () => {
       State.rename(els.streakName.value);
     };
+
+document.getElementById("markDoneBtn").addEventListener("click", markDone);
+document.getElementById('prevMonth').addEventListener('click', () => { const dt = new Date(viewYear, viewMonth - 1, 1); setView(dt.getFullYear(), dt.getMonth()); });
+document.getElementById('nextMonth').addEventListener('click', () => { const dt = new Date(viewYear, viewMonth + 1, 1); setView(dt.getFullYear(), dt.getMonth()); });
+document.getElementById('todayBtn').addEventListener('click', () => { const t = new Date(); setView(t.getFullYear(), t.getMonth()); });
+document.getElementById('clearBtn').addEventListener('click', async () => { if (confirm('Clear all streaks?')) { for (const k of Object.keys(cache)) { if (cache[k]) { await deleteDoc(streakRef(k)); cache[k] = false; } } render(); } });
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert("Login failed: " + err.message);
+    document.getElementById('password').focus();
+  }
+});
+
+
+document.getElementById('streakSelect').addEventListener('change', async e => {
+  setCurrentStreakName(e.target.value);
+  cache = {};
+  const t = new Date();
+  setView(t.getFullYear(), t.getMonth());
+
+  // update checkbox
+  await syncPublicCheckbox(currentStreakName);
+});
+
+
+document.getElementById("newStreakBtn").addEventListener("click", async () => {
+  const name = prompt("Enter a name for your new streak:");
+  if (!name) return;
+
+  const safeName = name.trim().replace(/[.#$/[\]]/g, "_");
+  if (!safeName) return alert("Invalid streak name");
+
+  const streakDoc = doc(db, "users", userId, "streaks", safeName);
+  await setDoc(streakDoc, { createdAt: Date.now() });
+
+  // refresh list
+  await loadStreakList();
+
+  // select new streak
+  document.getElementById("streakSelect").value = safeName;
+  setCurrentStreakName(safeName);
+  cache = {};
+  const t = new Date();
+  setView(t.getFullYear(), t.getMonth());
+});
+
+
+document.getElementById("renameBtn").addEventListener("click", e => {
+  const newStreakName = document.getElementById("streakName").value;
+  const streakDoc = doc(db, "users", userId, "streaks", currentStreakName);
+  updateDoc(streakDoc, { displayName: newStreakName });
+  loadStreakList();
+});
+
+const publicToggle = document.getElementById("publicToggle");
+publicToggle.addEventListener("click", async () => {
+  togglePublic(currentStreakName, publicToggle.checked);
+});
+
+publicToggle.addEventListener("change", async (e) => {
+  // Toggle share link visibility
+  document.getElementById("shareLinkBtn").style.display = e.target.checked ? "inline-block" : "none";
+});
+
+document.getElementById("shareLinkBtn").addEventListener("click", async () => {
+  const link = `${window.location.origin}?user=${userId}&streak=${encodeURIComponent(currentStreakName)}`;
+  await navigator.clipboard.writeText(link);
+  alert("Share link copied to clipboard!");
+});
+
+
+document.getElementById('streakSelect').addEventListener('change', e => {
+  loadStreak(e.target.value);
+});
+
+
+document.getElementById('stickyToday')
+  .addEventListener('click', () => {
+    document.getElementById('todayBtn').click();
+  });
+
+
+
+const sheet = document.getElementById('bottomSheet');
+const sheetBackdrop = document.getElementById('sheetBackdrop');
+const sheetTitle = document.getElementById('sheetTitle');
+const sheetDate = document.getElementById('sheetDate');
+const sheetStatus = document.getElementById('sheetStatus');
+const sheetAction = document.getElementById('sheetAction');
+
+let sheetContext = null;
+
+function openSheet({ streakName, dateStr, done }) {
+  sheetContext = { streakName, dateStr, done };
+
+  sheetTitle.textContent = streakName;
+  sheetDate.textContent = new Date(dateStr).toDateString();
+
+  sheetStatus.textContent = done ? 'Completed' : 'Not completed';
+  sheetStatus.style.color = done ? '#10b981' : '#facc15';
+
+  sheetAction.textContent = done ? 'Undo' : 'Mark done';
+
+  sheetBackdrop.style.display = 'block';
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+
+function closeSheet() {
+  sheet.classList.remove('open');
+  sheetBackdrop.style.display = 'none';
+  sheetContext = null;
+}
+
+sheetBackdrop.addEventListener('click', closeSheet);
+
+sheetAction.addEventListener('click', async () => {
+  if (!sheetContext) return;
+
+  const { dateStr, done } = sheetContext;
+
+  if (done) {
+    await deleteDoc(streakRef(dateStr));
+    cache[dateStr] = false;
+  } else {
+    await setDoc(streakRef(dateStr), {
+      done: true,
+      ts: Date.now()
+    });
+    cache[dateStr] = true;
+  }
+
+  closeSheet();
+  render();
+});
+
+
+
+
+
+
+
+
   }
 
   return {
