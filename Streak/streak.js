@@ -8,6 +8,19 @@ import { linkWithCredential, signInAnonymously, getAuth, onAuthStateChanged, set
 
 const Data = (() => {
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyAtlpMxWZ75kX_0c_SooL8lzeFXqOhAZgc",
+    authDomain: "streak-eda1a.firebaseapp.com",
+    projectId: "streak-eda1a",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Ensure user stays logged in across tabs/pages
+  setPersistence(auth, browserLocalPersistence);
+
   function uid() {
     return auth.currentUser?.uid;
   }
@@ -76,7 +89,8 @@ const Data = (() => {
     getDays,
     isDone,
     toggleDay,
-    getPublicStreak
+    getPublicStreak,
+    auth
   };
 
 })();
@@ -300,7 +314,7 @@ const UI = (() => {
 // INIT
 // =======================
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(Data.auth, async (user) => {
 
   if (!user) return;
 
