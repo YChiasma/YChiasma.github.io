@@ -314,7 +314,13 @@ const UI = (() => {
 // INIT
 // =======================
 
+console.log(Data.auth);
+console.log({Data, State, UI});
+
 onAuthStateChanged(Data.auth, async (user) => {
+
+  console.log("Auth State Changed");
+  console.log(user);
 
   if (!user) return;
 
