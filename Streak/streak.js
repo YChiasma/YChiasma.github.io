@@ -321,6 +321,12 @@ onAuthStateChanged(Data.auth, async (user) => {
 
   console.log("Auth State Changed");
   console.log(user);
+  console.log(Data.auth);
+
+  if (user && !Data.auth.currentUser.isAnonymous) {
+  } else {
+    await signInAnonymously(Data.auth);
+  }
 
   if (!user) return;
 
