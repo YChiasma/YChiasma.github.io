@@ -276,6 +276,56 @@ function closeSheet() {
   sheetContext = null;
 }
 
+async function authenticate(user) {
+  if (publicStreak) setCurrentStreakName(publicStreak);
+  const loginFormDisplay = document.getElementById('loginForm').style.display;
+  if (user && !auth.currentUser.isAnonymous) {
+    userId = user.uid;
+    guestMode = false;
+    if (publicUser && publicStreak && publicUser != userId) publicMode = true;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    const t = new Date();
+    setView(t.getFullYear(), t.getMonth());
+    await loadStreakList();
+    await loadStreak(currentStreakName);
+  } else {
+    await signInAnonymously(auth);
+    guestMode = true;
+    userId = auth.currentUser.uid;
+    
+    document.getElementById("guestModeMsg").style.display = "block";
+
+    publicMode = false;
+
+    if (publicUser && publicStreak) {
+      // Public view mode
+      publicMode = true;
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("clearBtn").style.display = "none";
+      document.getElementById("todayBtn").style.display = "none";
+      document.getElementById("publicToggle").disabled = true;
+      document.getElementById("shareLinkBtn").style.display = "none";
+
+      loadPublicStreak(publicUser, publicStreak);
+    } else {
+      const t = new Date();
+      setView(t.getFullYear(), t.getMonth());
+      await loadStreakList();
+      await loadStreak(currentStreakName);
+    }
+
+
+
+    document.getElementById('loginForm').style.display = loginFormDisplay;
+    document.getElementById('logoutBtn').style.display = 'none';
+    if ("none" != loginFormDisplay) {
+      document.getElementById('email').focus();
+    }
+  }
+}
+
 // =====================
 // EVENT LISTENERS
 // =====================
