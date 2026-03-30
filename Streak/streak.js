@@ -326,6 +326,64 @@ async function authenticate(user) {
   }
 }
 
+async function loadStreakList() {
+  const select = document.getElementById("streakSelect");
+  select.innerHTML = ""; // clear existing
+
+  if (null === userId) return;
+  const streaksCol = collection(db, "users", userId, "streaks");
+  const snaps = await getDocs(streaksCol);
+
+  if (snaps.empty) {
+    // create a default streak if none exist
+    await setDoc(doc(db, "users", userId, "streaks", "default"), {
+      createdAt: Date.now()
+    });
+    const opt = document.createElement("option");
+    opt.value = "default";
+    opt.textContent = "default";
+    select.appendChild(opt);
+    if (!currentStreakName) setCurrentStreakName("default");
+    return;
+  }
+
+  snaps.forEach(docSnap => {
+
+
+    const name = docSnap.data().displayName || docSnap.id;
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+
+  if (!currentStreakName) {
+    // pick first streak as active
+    setCurrentStreakName(select.options[0].value);
+  }
+  select.value = currentStreakName;
+}
+
+function renderSummaryPill() {
+  const pill = document.getElementById("summaryPill");
+  if (!pill || window.innerWidth > 720) return;
+
+  const info = getTodayStatusInfo();
+
+  pill.className = `summary-pill ${info.status}`;
+  pill.textContent = info.text;
+  pill.style.display = "flex";
+
+  pill.onclick = () => {
+    const todayStr = uidDate(new Date());
+    openSheet({
+      streakName: currentStreakDisplayName || currentStreakName,
+      dateStr: todayStr,
+      done: !!cache[todayStr]
+    });
+  };
+}
+
 // =====================
 // EVENT LISTENERS
 // =====================
