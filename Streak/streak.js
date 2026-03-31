@@ -384,6 +384,34 @@ function renderSummaryPill() {
   };
 }
 
+async function loadStreak(streakName) {
+  if (!userId) return;
+
+  setCurrentStreakName(streakName);
+  cache = {};
+
+  // 🔹 Sync public toggle
+  const checkbox = document.getElementById("publicToggle");
+  const streakDocRef = doc(db, "users", userId, "streaks", streakName);
+  const streakSnap = await getDoc(streakDocRef);
+  if (streakSnap.exists()) {
+    checkbox.checked = !!streakSnap.data().public;
+  } else {
+    checkbox.checked = false;
+  }
+
+  const shareBtn = document.getElementById("shareLinkBtn");
+  if (checkbox.checked) {
+    shareBtn.style.display = "inline-block";
+  } else {
+    shareBtn.style.display = "none";
+  }
+
+  // 🔹 Refresh the calendar
+  const today = new Date();
+  setView(today.getFullYear(), today.getMonth());
+}
+
 // =====================
 // EVENT LISTENERS
 // =====================
