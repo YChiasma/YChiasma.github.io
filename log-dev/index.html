@@ -147,6 +147,16 @@
       color: white;
       border: none;
     }
+
+    .pinButton{
+      font-size:0.8rem;
+      color:#666;
+      position:absolute;
+      top:16px;
+      right:70px;
+      text-decoration:underline;
+      cursor:pointer;
+    }
   </style>
 
 
@@ -350,6 +360,7 @@
     // ---------------- Listener ----------------
     db.collection("logs").doc(logId)
       .collection("entries")
+      .orderBy("pinned", "desc")
       .orderBy("timestamp", "desc")
       .onSnapshot(snap => {
 
@@ -374,6 +385,7 @@
             <div class="timestamp">${time}</div>
             <div class="entryContent">${renderWithCheckboxes(data.text, doc.id)}</div>
             <span class="editButton">Edit</span>
+            <span class="pinButton">${data.pinned ? "Unpin" : "Pin"}</span>
           `;
           entry.querySelector(".editButton").onclick =
             () => editEntry(doc.id, data.text);
@@ -453,6 +465,18 @@
         lastEdited: firebase.firestore.FieldValue.serverTimestamp()
       });
     });
+
+    entry.querySelector(".pinButton").onclick = async () => {
+
+      const ref = db.collection("logs")
+        .doc(logId)
+        .collection("entries")
+        .doc(doc.id);
+
+      await ref.update({
+        pinned: !data.pinned
+      });
+    };
   </script>
 </body>
 
