@@ -420,6 +420,19 @@
 
           }
 
+          entry.querySelector(".pinButton").onclick = async () => {
+
+                const ref = db.collection("logs")
+                  .doc(logId)
+                  .collection("entries")
+                  .doc(doc.id);
+
+                await ref.update({
+                  pinned: !data.pinned
+                });
+
+          };
+
           entries.appendChild(entry);
         });
       });
@@ -466,17 +479,7 @@
       });
     });
 
-    entry.querySelector(".pinButton").onclick = async () => {
 
-      const ref = db.collection("logs")
-        .doc(logId)
-        .collection("entries")
-        .doc(doc.id);
-
-      await ref.update({
-        pinned: !data.pinned
-      });
-    };
   </script>
 </body>
 
