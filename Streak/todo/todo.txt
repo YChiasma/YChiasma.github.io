@@ -1,0 +1,15 @@
+3:22 PM 4/4/2026
+
+Replace streak.js
+
+With the following js modules:
+
+auth.js
+bottomSheet.js
+dateUtils.js
+firebase.js
+main.js
+state.js
+streakData.js
+streakManager.js
+ui.js
