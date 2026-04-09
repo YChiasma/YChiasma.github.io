@@ -327,7 +327,8 @@
           text: text,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           lastEdited: firebase.firestore.FieldValue.serverTimestamp(),
-          edited: false
+          edited: false,
+          pinned: false
         });
 
       await ref.collection("versions").add({
