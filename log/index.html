@@ -147,6 +147,16 @@
       color: white;
       border: none;
     }
+
+    .pinButton {
+      font-size: 0.8rem;
+      color: #666;
+      position: absolute;
+      top: 16px;
+      right: 70px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
   </style>
 
 
@@ -317,7 +327,8 @@
           text: text,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           lastEdited: firebase.firestore.FieldValue.serverTimestamp(),
-          edited: false
+          edited: false,
+          pinned: false
         });
 
       await ref.collection("versions").add({
@@ -357,27 +368,53 @@
         let lastDate = null;
         let lastProcessedDate = null;
 
+        const pinned = [];
+        const unpinned = [];
+
         snap.forEach(doc => {
           const data = doc.data();
+          if (data.pinned) pinned.push({ doc, data });
+          else unpinned.push({ doc, data });
+        });
+
+        const ordered = [...pinned, ...unpinned];
+
+        ordered.forEach(({ doc, data }) => {
           const entry = document.createElement("div");
           entry.className = "entry";
 
           const time = data.timestamp?.toDate?.().toLocaleString() || "(pending...)";
           const date = data.timestamp?.toDate?.().toDateString();
+
           if (date != lastProcessedDate) {
             lastProcessedDate = date;
             const dateHeader = document.createElement("h3");
             dateHeader.textContent = date;
             entries.appendChild(dateHeader);
           }
+
           entry.innerHTML = `
-            <div class="timestamp">${time}</div>
-            <div class="entryContent">${renderWithCheckboxes(data.text, doc.id)}</div>
-            <span class="editButton">Edit</span>
-          `;
+    <div class="timestamp">${time}</div>
+    <div class="entryContent">${renderWithCheckboxes(data.text, doc.id)}</div>
+    <span class="editButton">Edit</span>
+    <span class="pinButton">${data.pinned ? "Unpin" : "Pin"}</span>
+  `;
+
           entry.querySelector(".editButton").onclick =
             () => editEntry(doc.id, data.text);
 
+          entry.querySelector(".pinButton").onclick = async () => {
+            const ref = db.collection("logs")
+              .doc(logId)
+              .collection("entries")
+              .doc(doc.id);
+
+            await ref.update({
+              pinned: !data.pinned
+            });
+          };
+
+          // --- existing history logic stays unchanged ---
           if (data.edited) {
             const versionsRef = doc.ref.collection("versions").orderBy("timestamp", "desc");
 
@@ -403,9 +440,7 @@
                 box.style.display =
                   box.style.display === "none" ? "block" : "none";
               };
-
             });
-
           }
 
           entries.appendChild(entry);
@@ -453,6 +488,8 @@
         lastEdited: firebase.firestore.FieldValue.serverTimestamp()
       });
     });
+
+
   </script>
 </body>
 
