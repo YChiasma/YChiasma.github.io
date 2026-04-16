@@ -1,42 +1,103 @@
-import {
-  auth,
-  onAuthStateChanged,
-  signInAnonymously
-} from "./firebaseService.js";
+// main.js — wires up global event listeners and boots the app.
+// Import order matters: firebase must be first (sets up auth persistence).
 
-import {
-  toggleDay,
-  loadMonth,
-  isDone,
-  resetCache
-} from "./streakService.js";
+import "./firebase.js";
+import "./auth.js";        // registers onAuthStateChanged → authenticate()
 
-let userId = null;
-let currentStreak = "default";
+import { publicStreak }                             from "./state.js";
+import { markDone }                                 from "./streakData.js";
+import { setView }                                  from "./ui.js";
+import { deleteDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { streakRef }                                from "./streakData.js";
+import { cache, setCacheEntry }                     from "./state.js";
+import { render }                                   from "./ui.js";
+import { setCurrentStreakName, loadStreak, loadStreakList, createStreak, renameStreak, togglePublic, syncPublicCheckbox } from "./streakManager.js";
+import { userId, currentStreakName, viewYear, viewMonth } from "./state.js";
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    await signInAnonymously(auth);
-    return;
-  }
+// ── Mark done button ─────────────────────────────────────────────────────────
 
-  userId = user.uid;
-  init();
+document.getElementById("markDoneBtn").addEventListener("click", markDone);
+
+// ── Month navigation ─────────────────────────────────────────────────────────
+
+document.getElementById('prevMonth').addEventListener('click', () => {
+  const dt = new Date(viewYear, viewMonth - 1, 1);
+  setView(dt.getFullYear(), dt.getMonth());
 });
 
-async function init() {
-  await loadMonth(userId, currentStreak, 2026, 3);
+document.getElementById('nextMonth').addEventListener('click', () => {
+  const dt = new Date(viewYear, viewMonth + 1, 1);
+  setView(dt.getFullYear(), dt.getMonth());
+});
+
+document.getElementById('todayBtn').addEventListener('click', () => {
+  const t = new Date();
+  setView(t.getFullYear(), t.getMonth());
+});
+
+document.getElementById('stickyToday').addEventListener('click', () => {
+  document.getElementById('todayBtn').click();
+});
+
+// ── Clear all ────────────────────────────────────────────────────────────────
+
+document.getElementById('clearBtn').addEventListener('click', async () => {
+  if (!confirm('Clear all streaks?')) return;
+  for (const k of Object.keys(cache)) {
+    if (cache[k]) {
+      await deleteDoc(streakRef(k));
+      setCacheEntry(k, false);
+    }
+  }
   render();
-}
+});
 
-async function handleClick(dateStr) {
-  await toggleDay(userId, currentStreak, dateStr);
-  render();
-}
+// ── Streak selector ──────────────────────────────────────────────────────────
 
-async function render() {
-  console.log("Render with cached data");
-}
+document.getElementById('streakSelect').addEventListener('change', e => {
+  loadStreak(e.target.value);
+});
 
-// Example usage:
-// handleClick("2026-03-27");
+document.getElementById("newStreakBtn").addEventListener("click", createStreak);
+document.getElementById("renameBtn").addEventListener("click",   renameStreak);
+
+// ── Public toggle / share ────────────────────────────────────────────────────
+
+const publicToggle = document.getElementById("publicToggle");
+
+publicToggle.addEventListener("click", () => {
+  togglePublic(currentStreakName, publicToggle.checked);
+});
+
+publicToggle.addEventListener("change", e => {
+  document.getElementById("shareLinkBtn").style.display = e.target.checked ? "inline-block" : "none";
+});
+
+document.getElementById("shareLinkBtn").addEventListener("click", async () => {
+  const link = `${window.location.origin}?user=${userId}&streak=${encodeURIComponent(currentStreakName)}`;
+  await navigator.clipboard.writeText(link);
+  alert("Share link copied to clipboard!");
+});
+
+// ── Swipe navigation (mobile) ────────────────────────────────────────────────
+
+let startX = null;
+
+document.querySelector(".month-card").addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+document.querySelector(".month-card").addEventListener("touchend", e => {
+  if (startX === null) return;
+  const diff = e.changedTouches[0].clientX - startX;
+  if (Math.abs(diff) > 50) {
+    diff > 0
+      ? document.getElementById("prevMonth").click()
+      : document.getElementById("nextMonth").click();
+  }
+  startX = null;
+});
+
+// ── Bootstrap (public streak pre-selection) ──────────────────────────────────
+
+if (publicStreak) setCurrentStreakName(publicStreak);
