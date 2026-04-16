@@ -74,7 +74,7 @@ publicToggle.addEventListener("change", e => {
 });
 
 document.getElementById("shareLinkBtn").addEventListener("click", async () => {
-  const link = `${window.location.origin}?user=${userId}&streak=${encodeURIComponent(currentStreakName)}`;
+  const link = `${window.location}?user=${userId}&streak=${encodeURIComponent(currentStreakName)}`;
   await navigator.clipboard.writeText(link);
   alert("Share link copied to clipboard!");
 });
