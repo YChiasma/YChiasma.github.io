@@ -1,3 +1,7 @@
-4:57 PM 4/9/2026
+2:08 PM 4/17/2026
 
-Test the new module structure
+Fix "Running" and "Meditation" appearing when viewing public streak
+Find out why appearance is different between Firefox and Brave
+Mark Done should not be visible on other people's streaks
+Add a display name for guest mode
+Add ability to "claim" guest mode streaks when you login or register
