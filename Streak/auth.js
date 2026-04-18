@@ -52,6 +52,7 @@ export async function authenticate(user) {
       document.getElementById('logoutBtn').style.display             = 'none';
       document.getElementById('clearBtn').style.display              = 'none';
       document.getElementById('todayBtn').style.display              = 'none';
+      document.getElementById('markDoneBtn').style.display              = 'none';
       document.getElementById('publicToggle').disabled               = true;
       document.getElementById('shareLinkBtn').style.display          = 'none';
 
