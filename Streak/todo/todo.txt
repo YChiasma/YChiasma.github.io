@@ -6,6 +6,5 @@ Add "+" button to top of page for a new streak
 
 Fix "Running" and "Meditation" appearing when viewing public streak
 Find out why appearance is different between Firefox and Brave
-Mark Done should not be visible on other people's streaks
 Add a display name for guest mode
 Add ability to "claim" guest mode streaks when you login or register

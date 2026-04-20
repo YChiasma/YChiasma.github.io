@@ -1,4 +1,12 @@
 DONE
+7:21 PM 4/19/2026
+
+ADDED
+2:08 PM 4/17/2026
+
+Mark Done should not be visible on other people's streaks
+
+DONE
 2:12 PM 4/17/2026
 
 Result: it works
