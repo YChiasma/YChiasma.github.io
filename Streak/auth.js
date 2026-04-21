@@ -45,6 +45,8 @@ export async function authenticate(user) {
 
     document.getElementById("guestModeMsg").style.display = "block";
 
+    await loadStreakList();
+
     if (publicUser && publicStreak) {
       // Public view mode — read-only
       setPublicMode(true);
@@ -60,7 +62,7 @@ export async function authenticate(user) {
     } else {
       const t = new Date();
       setView(t.getFullYear(), t.getMonth());
-      await loadStreakList();
+      // await loadStreakList(); // TODO: Remove
 
       const { currentStreakName } = await import("./state.js");
       await loadStreak(currentStreakName);

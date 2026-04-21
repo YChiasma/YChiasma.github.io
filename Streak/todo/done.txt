@@ -1,4 +1,12 @@
 DONE
+10:29 PM 4/20/2026
+
+ADDED
+2:08 PM 4/17/2026
+
+Fix "Running" and "Meditation" appearing when viewing public streak
+
+DONE
 7:21 PM 4/19/2026
 
 ADDED

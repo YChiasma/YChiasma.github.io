@@ -1,10 +1,17 @@
+10:30 PM 4/20/2026
+
+Test the fix for "Running" and "Meditation" appearing when viewing public streak as a guest
+
+10:29 PM 4/20/2026
+
+See "TODO: Remove" in auth.js
+
 4:11 PM 4/18/2026
 
 Add "+" button to top of page for a new streak
 
 2:08 PM 4/17/2026
 
-Fix "Running" and "Meditation" appearing when viewing public streak
 Find out why appearance is different between Firefox and Brave
 Add a display name for guest mode
 Add ability to "claim" guest mode streaks when you login or register
