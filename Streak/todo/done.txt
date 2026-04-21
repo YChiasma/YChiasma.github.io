@@ -1,4 +1,20 @@
 DONE
+4:16 PM 4/21/2026
+
+ADDED
+10:29 PM 4/20/2026
+
+See "TODO: Remove" in auth.js
+
+DONE
+4:16 PM 4/21/2026
+
+ADDED
+10:30 PM 4/20/2026
+
+Test the fix for "Running" and "Meditation" appearing when viewing public streak as a guest
+
+DONE
 10:29 PM 4/20/2026
 
 ADDED

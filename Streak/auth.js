@@ -62,7 +62,6 @@ export async function authenticate(user) {
     } else {
       const t = new Date();
       setView(t.getFullYear(), t.getMonth());
-      // await loadStreakList(); // TODO: Remove
 
       const { currentStreakName } = await import("./state.js");
       await loadStreak(currentStreakName);
