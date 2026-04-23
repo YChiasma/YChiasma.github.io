@@ -1,3 +1,7 @@
+9:21 PM 4/22/2026
+
+Implement userDisplayName in streak.html and set title
+
 4:11 PM 4/18/2026
 
 Add "+" button to top of page for a new streak
