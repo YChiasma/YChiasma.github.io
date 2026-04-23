@@ -14,6 +14,24 @@ import { render }                                   from "./ui.js";
 import { setCurrentStreakName, loadStreak, loadStreakList, createStreak, renameStreak, togglePublic, syncPublicCheckbox } from "./streakManager.js";
 import { userId, currentStreakName, viewYear, viewMonth } from "./state.js";
 
+// ── Get display name ─────────────────────────────────────────────────────────
+
+    let displayName = undefined;
+    
+    async function getUserInfo(userId) {
+      const userDocRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userDocRef);
+      if(userSnap.exists()) {
+        const data = userSnap.data();
+        if(data.displayName) {
+          displayName = data.displayName;
+          document.getElementById("userDisplayName").textContent = displayName;
+        }
+      }
+    }
+
+getUserInfo(userId);
+
 // ── Mark done button ─────────────────────────────────────────────────────────
 
 document.getElementById("markDoneBtn").addEventListener("click", markDone);
