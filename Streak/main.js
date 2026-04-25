@@ -7,7 +7,7 @@ import "./auth.js";        // registers onAuthStateChanged → authenticate()
 import { publicStreak }                             from "./state.js";
 import { markDone }                                 from "./streakData.js";
 import { setView }                                  from "./ui.js";
-import { deleteDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, deleteDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { streakRef }                                from "./streakData.js";
 import { cache, setCacheEntry }                     from "./state.js";
 import { render }                                   from "./ui.js";
