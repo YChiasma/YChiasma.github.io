@@ -1,7 +1,7 @@
 import { signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut }
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-import { auth } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 import {
   publicUser, publicStreak,
   setUserId, userId, setPublicMode, setGuestMode,
@@ -9,6 +9,8 @@ import {
 import { setCurrentStreakName, loadStreakList, loadStreak } from "./streakManager.js";
 import { loadPublicStreak } from "./streakData.js";
 import { setView } from "./ui.js";
+
+import { doc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ── Get display name ─────────────────────────────────────────────────────────
 
