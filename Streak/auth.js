@@ -4,11 +4,29 @@ import { signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, sign
 import { auth } from "./firebase.js";
 import {
   publicUser, publicStreak,
-  setUserId, setPublicMode, setGuestMode,
+  setUserId, userId, setPublicMode, setGuestMode,
 } from "./state.js";
 import { setCurrentStreakName, loadStreakList, loadStreak } from "./streakManager.js";
 import { loadPublicStreak } from "./streakData.js";
 import { setView } from "./ui.js";
+
+// ── Get display name ─────────────────────────────────────────────────────────
+
+    let displayName = undefined;
+    
+    async function getUserInfo(userId) {
+      const userDocRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userDocRef);
+      if(userSnap.exists()) {
+        const data = userSnap.data();
+        if(data.displayName) {
+          displayName = data.displayName;
+          document.getElementById("userDisplayName").textContent = displayName;
+        }
+      }
+    }
+
+getUserInfo(userId);
 
 // ── Auth state handler ───────────────────────────────────────────────────────
 
@@ -21,6 +39,7 @@ export async function authenticate(user) {
   if (user && !auth.currentUser.isAnonymous) {
     // Logged-in user
     setUserId(user.uid);
+    getUserInfo(userId);
     setGuestMode(false);
 
     const { userId } = await import("./state.js");
@@ -41,6 +60,7 @@ export async function authenticate(user) {
     await signInAnonymously(auth);
     setGuestMode(true);
     setUserId(auth.currentUser.uid);
+    getUserInfo(userId);
     setPublicMode(false);
 
     document.getElementById("guestModeMsg").style.display = "block";

@@ -17,6 +17,7 @@ import { userId, currentStreakName, viewYear, viewMonth } from "./state.js";
 
 // ── Get display name ─────────────────────────────────────────────────────────
 
+/* // TODO: Remove
     let displayName = undefined;
     
     async function getUserInfo(userId) {
@@ -32,6 +33,7 @@ import { userId, currentStreakName, viewYear, viewMonth } from "./state.js";
     }
 
 getUserInfo(userId);
+*/
 
 // ── Mark done button ─────────────────────────────────────────────────────────
 
