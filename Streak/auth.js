@@ -10,7 +10,7 @@ import { setCurrentStreakName, loadStreakList, loadStreak } from "./streakManage
 import { loadPublicStreak } from "./streakData.js";
 import { setView } from "./ui.js";
 
-import { doc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, getDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ── Get display name ─────────────────────────────────────────────────────────
 
@@ -27,8 +27,6 @@ import { doc }                                from "https://www.gstatic.com/fire
         }
       }
     }
-
-getUserInfo(userId);
 
 // ── Auth state handler ───────────────────────────────────────────────────────
 
