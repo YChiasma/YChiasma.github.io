@@ -12,6 +12,9 @@ import { setView } from "./ui.js";
 
 import { doc, getDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+import { getUserInfo } from "./displayName.js";
+
+/*
 // ── Get display name ─────────────────────────────────────────────────────────
 
     let displayName = undefined;
@@ -32,6 +35,7 @@ import { doc, getDoc }                                from "https://www.gstatic.
         }
       }
     }
+*/
 
 // ── Auth state handler ───────────────────────────────────────────────────────
 
