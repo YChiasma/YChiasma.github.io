@@ -10,11 +10,9 @@ import { setCurrentStreakName, loadStreakList, loadStreak } from "./streakManage
 import { loadPublicStreak } from "./streakData.js";
 import { setView } from "./ui.js";
 
-import { doc, getDoc }                                from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
 import { getUserInfo } from "./displayName.js";
 
-/*
+/* // TODO : Remove
 // ── Get display name ─────────────────────────────────────────────────────────
 
     let displayName = undefined;
