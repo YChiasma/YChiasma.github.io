@@ -1,7 +1,7 @@
 import { signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut }
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-import { db, auth } from "./firebase.js";
+import { auth } from "./firebase.js";
 import {
   publicUser, publicStreak,
   setUserId, userId, setPublicMode, setGuestMode,
