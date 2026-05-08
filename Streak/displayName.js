@@ -6,10 +6,8 @@ import { doc, getDoc }                                from "https://www.gstatic.
     let displayName = undefined;
     
     export async function getUserInfo(userId) {
-      console.log(userId);
       const userDocRef = doc(db, "users", userId);
       const userSnap = await getDoc(userDocRef);
-      console.log(userSnap);
       if(userSnap.exists()) {
         const data = userSnap.data();
         console.log(data);
@@ -21,3 +19,27 @@ import { doc, getDoc }                                from "https://www.gstatic.
         }
       }
     }
+
+const changeNameButton = document.getElementById("changeName");
+const saveNameButton = document.getElementById("saveName");
+let textField = null;
+
+saveNameButton.addEventListener("click", () => {
+  setDisplayName(textField.value);
+});
+
+changeNameButton.addEventListener("click", () => {
+  textField = document.createElement("input");
+  textField.value = displayName;
+  const userDisplayName = document.getElementById("userDisplayName");
+  userDisplayName.textContent = "";
+  userDisplayName.appendChild(textField);
+  textField.select();
+  textField.addEventListener("keyup", (e) => {
+    if("Enter" == e.key) {
+      setDisplayName(textField.value);
+    }
+  });
+  changeNameButton.style.display = "none";
+  saveNameButton.style.display = "";
+});
