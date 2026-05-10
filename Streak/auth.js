@@ -5,6 +5,7 @@ import { auth } from "./firebase.js";
 import {
   publicUser, publicStreak,
   setUserId, userId, setPublicMode, setGuestMode,
+  setCurrentUser,
 } from "./state.js";
 import { setCurrentStreakName, loadStreakList, loadStreak } from "./streakManager.js";
 import { loadPublicStreak } from "./streakData.js";
@@ -12,32 +13,11 @@ import { setView } from "./ui.js";
 
 import { getUserInfo } from "./displayName.js";
 
-/* // TODO : Remove
-// ── Get display name ─────────────────────────────────────────────────────────
-
-    let displayName = undefined;
-    
-    async function getUserInfo(userId) {
-      console.log(userId);
-      const userDocRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userDocRef);
-      console.log(userSnap);
-      if(userSnap.exists()) {
-        const data = userSnap.data();
-        console.log(data);
-        if(data.displayName) {
-          console.log(data.displayName);
-          displayName = data.displayName;
-          document.getElementById("userDisplayName").textContent = displayName;
-          console.log("Done.");
-        }
-      }
-    }
-*/
-
 // ── Auth state handler ───────────────────────────────────────────────────────
 
 export async function authenticate(user) {
+  setCurrentUser(user);
+
   if (publicStreak) setCurrentStreakName(publicStreak);
 
   const loginForm         = document.getElementById('loginForm');

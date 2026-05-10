@@ -13,6 +13,7 @@ export let publicMode = false;
 export let guestMode = false;
 export let viewYear = null;
 export let viewMonth = null;
+export let currentUser = null;
 
 // Setters (needed because ES module bindings are live but not assignable from outside)
 export function setUserId(v)                    { userId = v; }
@@ -25,3 +26,4 @@ export function setPublicMode(v)                { publicMode = v; }
 export function setGuestMode(v)                 { guestMode = v; }
 export function setViewYear(v)                  { viewYear = v; }
 export function setViewMonth(v)                 { viewMonth = v; }
+export function setCurrentUser(v)               { currentUser = v; }
