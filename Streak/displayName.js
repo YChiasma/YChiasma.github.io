@@ -1,5 +1,5 @@
 import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { currentUser } from "./state.js";
 
 // ── Get display name ─────────────────────────────────────────────────────────
