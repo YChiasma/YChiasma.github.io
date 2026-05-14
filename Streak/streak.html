@@ -15,14 +15,6 @@
     h1{font-size:18px;margin:0}
     .sub{color:var(--muted);font-size:13px}
     .controls{display:flex;gap:8px;align-items:center}
-    .a-btn{
-      /*display: inline-block;
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 5px;*/
-    }
     .btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 10px;border-radius:10px;cursor:pointer}
     .btn.primary{background:linear-gradient(90deg,var(--accent),#5b21b6);border:none;color:white}
     .calendar-wrap{display:flex;gap:14px;align-items:flex-start}
@@ -330,7 +322,7 @@
         <button class="btn primary" id="markDoneBtn">Mark Done</button>
         <button class="btn" id="todayBtn">Today</button>
         <button class="btn" id="clearBtn">Clear all</button>
-        <a class="btn" id="profileBtn">My Profile</a>
+        <button onclick="window.location=this.getAttribute('href');" href="profile" class="btn" id="profileBtn">My Profile</button>
         <button class="btn" id="logoutBtn" style="display:none">Logout</button>
       </div>
     </header>
