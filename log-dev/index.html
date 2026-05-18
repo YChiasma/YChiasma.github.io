@@ -21,6 +21,12 @@
       text-align: center;
     }
 
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
     textarea {
       box-sizing: border-box;
       font-size: 16px;
@@ -167,8 +173,10 @@
   <h1 id="h1">Shared Log</h1>
   <p id="shareLink"></p>
 
-  <button id="exportText">Export Text</button>
-  <button id="exportJson">Export JSON</button>
+  <div class="button-container">
+    <button id="exportText">Export Text</button>
+    <button id="exportJson">Export JSON</button>
+  </div>
 
   <textarea id="entryText"></textarea>
   <button id="addEntry">Add Entry</button>
