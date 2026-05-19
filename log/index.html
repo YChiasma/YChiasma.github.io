@@ -21,6 +21,12 @@
       text-align: center;
     }
 
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
     textarea {
       box-sizing: border-box;
       font-size: 16px;
@@ -167,6 +173,11 @@
   <h1 id="h1">Shared Log</h1>
   <p id="shareLink"></p>
 
+  <div class="button-container">
+    <button id="exportText">Export Text</button>
+    <button id="exportJson">Export JSON</button>
+  </div>
+
   <textarea id="entryText"></textarea>
   <button id="addEntry">Add Entry</button>
   <div id="entries"></div>
@@ -221,6 +232,181 @@
     }
   </script>
   <script>
+
+async function exportToText(){
+
+  const pageSnap = await db
+    .collection("pages")
+    .doc(logId)
+    .get();
+
+  const pageName = pageSnap.exists
+    ? pageSnap.data().name
+    : "Shared Log";
+
+  const entriesSnap = await db
+    .collection("logs")
+    .doc(logId)
+    .collection("entries")
+    .orderBy("timestamp","desc")
+    .get();
+
+  const pinned = [];
+  const unpinned = [];
+
+  entriesSnap.forEach(doc=>{
+    const data = doc.data();
+
+    if(data.pinned) pinned.push(data);
+    else unpinned.push(data);
+  });
+
+  const ordered = [...pinned, ...unpinned];
+
+  let text = "";
+
+  text += `${pageName}\n`;
+  text += `Exported: ${new Date().toLocaleString()}\n`;
+  text += `Link ID: ${logId}\n\n`;
+  text += "=".repeat(50) + "\n\n";
+
+  ordered.forEach(data=>{
+
+    if(data.pinned){
+      text += "📌 [Pinned]\n";
+    }
+
+    const timestamp =
+      data.timestamp?.toDate?.()
+        ?.toLocaleString?.()
+      || "(pending...)";
+
+    text += `${timestamp}\n\n`;
+
+    text += (data.text || "") + "\n\n";
+
+    if(data.edited && data.lastEdited){
+      text +=
+        `Last edited: ${
+          data.lastEdited
+            ?.toDate?.()
+            ?.toLocaleString?.()
+        }\n\n`;
+    }
+
+    text += "-".repeat(50) + "\n\n";
+  });
+
+  const blob = new Blob(
+    [text],
+    {type:"text/plain"}
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+
+  const safeName = pageName
+    .replace(/[^\w\s-]/g,"")
+    .replace(/\s+/g,"-")
+    .toLowerCase();
+
+  a.download =
+    `${safeName}-${logId}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+exportText.onclick = exportToText;
+
+
+async function exportToJSON(){
+
+  const pageSnap = await db
+    .collection("pages")
+    .doc(logId)
+    .get();
+
+  const entriesSnap = await db
+    .collection("logs")
+    .doc(logId)
+    .collection("entries")
+    .orderBy("timestamp", "desc")
+    .get();
+
+  const entries = [];
+
+  for(const doc of entriesSnap.docs){
+
+    const data = doc.data();
+
+    const versionsSnap = await doc.ref
+      .collection("versions")
+      .orderBy("timestamp", "asc")
+      .get();
+
+    const versions = versionsSnap.docs.map(v=>{
+
+      const d = v.data();
+
+      return {
+        text: d.text,
+        timestamp: d.timestamp?.toDate?.()?.toISOString?.() ?? null
+      };
+    });
+
+    entries.push({
+      id: doc.id,
+      text: data.text ?? "",
+      timestamp:
+        data.timestamp?.toDate?.()?.toISOString?.() ?? null,
+      lastEdited:
+        data.lastEdited?.toDate?.()?.toISOString?.() ?? null,
+      edited: !!data.edited,
+      pinned: !!data.pinned,
+      versions
+    });
+  }
+
+  const exportData = {
+    logId,
+    pageName: pageSnap.exists
+      ? pageSnap.data().name
+      : "Shared Log",
+    exportedAt: new Date().toISOString(),
+    entries
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(exportData, null, 2)],
+    {type:"application/json"}
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+
+  const safeName = (
+    exportData.pageName || "shared-log"
+  )
+    .replace(/[^\w\s-]/g,"")
+    .replace(/\s+/g,"-")
+    .toLowerCase();
+
+  a.download =
+    `${safeName}-${logId}.json`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+exportJson.onclick = exportToJSON;
+
     function escapeHTML(s) {
       return s.replace(/[&<>"']/g, c =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
