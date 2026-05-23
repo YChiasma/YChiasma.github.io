@@ -7,6 +7,7 @@
   <title>Shared Log</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -183,6 +184,49 @@
   <div id="entries"></div>
 
   <script>
+    const storage = firebase.storage();
+
+document.addEventListener("paste", async e => {
+  const items = e.clipboardData?.items;
+
+  for (const item of items) {
+    if (!item.type.startsWith("image/")) continue;
+
+    const file = item.getAsFile();
+    await uploadImage(file);
+  }
+});
+
+document.addEventListener("drop", async e => {
+  e.preventDefault();
+
+  const files = [...e.dataTransfer.files];
+
+  for (const file of files) {
+    if (!file.type.startsWith("image/")) continue;
+    await uploadImage(file);
+  }
+});
+
+document.addEventListener("dragover", e => {
+  e.preventDefault();
+});
+
+async function uploadImage(file){
+
+  const filename =
+    `${logId}/${crypto.randomUUID()}-${file.name}`;
+
+  const ref = storage.ref().child(filename);
+
+  await ref.put(file);
+
+  const url = await ref.getDownloadURL();
+
+  entryText.value +=
+    `\n[image:${url}]\n`;
+}
+
     function modalPrompt(title, defaultValue = "") {
       return new Promise(resolve => {
 
@@ -343,20 +387,33 @@ async function exportToJSON(){
 
     const data = doc.data();
 
-    const versionsSnap = await doc.ref
-      .collection("versions")
-      .orderBy("timestamp", "asc")
-      .get();
+    let versions = [];
 
-    const versions = versionsSnap.docs.map(v=>{
+    if(!!data.edited) {
 
-      const d = v.data();
+      const versionsSnap = await doc.ref
+        .collection("versions")
+        .orderBy("timestamp", "asc")
+        .get();
 
-      return {
-        text: d.text,
-        timestamp: d.timestamp?.toDate?.()?.toISOString?.() ?? null
-      };
-    });
+      versions = versionsSnap.docs.map(v=>{
+
+        const d = v.data();
+
+        return {
+          text: d.text,
+          timestamp: d.timestamp?.toDate?.()?.toISOString?.() ?? null
+        };
+      });
+    }
+    else {
+
+      versions = [{
+        text: data.text ?? "",
+        timestamp: data.timestamp?.toDate?.()?.toISOString?.() ?? null
+      }];
+
+    }
 
     entries.push({
       id: doc.id,
@@ -418,6 +475,22 @@ exportJson.onclick = exportToJSON;
       const lines = text.split("\n");
 
       return lines.map((line, i) => {
+
+const imageMatch =
+  line.match(/^\[image:(.+?)\]$/i);
+
+if(imageMatch){
+  return `
+    <img
+      src="${imageMatch[1]}"
+      style="
+        max-width:100%;
+        border-radius:8px;
+        margin-top:6px;
+      "
+    >
+  `;
+}
 
         const match = line.match(/^\[( |x)\]\s?(.*)$/i);
 
