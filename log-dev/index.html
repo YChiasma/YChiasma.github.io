@@ -184,7 +184,6 @@
   <div id="entries"></div>
 
   <script>
-    const storage = firebase.storage();
 
 document.addEventListener("paste", async e => {
   const items = e.clipboardData?.items;
@@ -522,6 +521,8 @@ if(imageMatch){
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    const storage = firebase.storage();
 
     // ---------------- Log ID ----------------
     const params = new URLSearchParams(location.search);
