@@ -273,7 +273,7 @@ async function exportToText(){
   ordered.forEach(data=>{
 
     if(data.pinned){
-      text += "📌 [Pinned]\n";
+      text += "≡ƒôî [Pinned]\n";
     }
 
     const timestamp =
@@ -343,20 +343,33 @@ async function exportToJSON(){
 
     const data = doc.data();
 
-    const versionsSnap = await doc.ref
-      .collection("versions")
-      .orderBy("timestamp", "asc")
-      .get();
+    let versions = [];
 
-    const versions = versionsSnap.docs.map(v=>{
+    if(!!data.edited) {
 
-      const d = v.data();
+      const versionsSnap = await doc.ref
+        .collection("versions")
+        .orderBy("timestamp", "asc")
+        .get();
 
-      return {
-        text: d.text,
-        timestamp: d.timestamp?.toDate?.()?.toISOString?.() ?? null
-      };
-    });
+      versions = versionsSnap.docs.map(v=>{
+
+        const d = v.data();
+
+        return {
+          text: d.text,
+          timestamp: d.timestamp?.toDate?.()?.toISOString?.() ?? null
+        };
+      });
+    }
+    else {
+
+      versions = [{
+        text: data.text ?? "",
+        timestamp: data.timestamp?.toDate?.()?.toISOString?.() ?? null
+      }];
+
+    }
 
     entries.push({
       id: doc.id,
@@ -653,7 +666,7 @@ exportJson.onclick = exportToJSON;
 
       if (!line) return;
 
-      // toggle [ ] ↔ [x]
+      // toggle [ ] Γåö [x]
       lines[lineIndex] =
         line.startsWith("[x]")
           ? line.replace(/^\[x\]/i, "[ ]")
