@@ -176,6 +176,7 @@
   <div class="button-container">
     <button id="exportText">Export Text</button>
     <button id="exportJson">Export JSON</button>
+    <button id="addCheckbox">☐ Checkbox</button>
   </div>
 
   <textarea id="entryText"></textarea>
@@ -183,6 +184,53 @@
   <div id="entries"></div>
 
   <script>
+
+
+addCheckbox.onclick = () => {
+
+  const textarea = entryText;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+
+  const text = textarea.value;
+
+  // find current line boundaries
+  const lineStart =
+    text.lastIndexOf("\n", start - 1) + 1;
+
+  const lineEnd =
+    text.indexOf("\n", start);
+
+  const actualLineEnd =
+    lineEnd === -1 ? text.length : lineEnd;
+
+  const line =
+    text.slice(lineStart, actualLineEnd);
+
+  // already has checkbox?
+  if (/^\[( |x)\]\s/.test(line)) {
+    textarea.focus();
+    return;
+  }
+
+  // insert checkbox at line start
+  const updated =
+    text.slice(0, lineStart) +
+    "[ ] " +
+    text.slice(lineStart);
+
+  textarea.value = updated;
+
+  // keep cursor position sensible
+  const offset = 4;
+
+  textarea.selectionStart = start + offset;
+  textarea.selectionEnd = end + offset;
+
+  textarea.focus();
+};
+
     function modalPrompt(title, defaultValue = "") {
       return new Promise(resolve => {
 
