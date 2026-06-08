@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chatroom</title>
+  <script src="lib/firebase/firebase-auth-facade.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 10px; }
+    #messages { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 5px; }
+    input { width: 100%; box-sizing: border-box; }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 20px);
+    }
+    #messages {
+      flex: 1;
+    }
+    #chatroomUrl {
+      font-size: 0.9em;
+      color: gray;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #chatroomUrl:hover {
+      white-space: normal;
+      overflow: visible;
+      background-color: #f8f8f8;
+      padding: 2px;
+      border-radius: 4px;
+    }
+    #nameInput {
+      margin-bottom: 5px;
+    }
+    .you {
+      color: #2600ff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <input id="chatroomUrl" style="font-size: 0.9em; color: gray; margin-bottom: 5px;" />
+    <input type="text" id="nameInput" placeholder="Your name (default: Anon)" />
+    <div id="messages"></div>
+    <input type="text" id="msgInput" placeholder="Type a message..." />
+  </div>
+  <script type="module" src="./sidebar.js"></script>
+</body>
+</html>
