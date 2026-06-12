@@ -187,11 +187,13 @@ chatroomUrlInput.addEventListener('keypress', e => {
   }
 });
 
-// Listen for tab changes
-browser.tabs.onActivated.addListener(initChatForCurrentTab);
-browser.tabs.onUpdated.addListener((_, info) => {
-  if (info.status === 'complete') initChatForCurrentTab();
-});
+if("undefined" != typeof(browser)) {
+  // Listen for tab changes
+  browser.tabs.onActivated.addListener(initChatForCurrentTab);
+  browser.tabs.onUpdated.addListener((_, info) => {
+    if (info.status === 'complete') initChatForCurrentTab();
+  });
+}
 
 // Initial load
 initChatForCurrentTab();
