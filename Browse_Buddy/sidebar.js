@@ -61,6 +61,9 @@ function decodeKey(key) {
 
 // Get active tab's URL
 async function getCurrentTabURL() {
+  if("undefined" == typeof(browser)) {
+    return '';
+  }
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   return tab?.url || '';
 }
