@@ -1,0 +1,273 @@
+<h2 class="sr-only">Pipe ball game: type a color, dispense a ball, and route it through a grid of pipe pieces you place and rotate.</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+#app{display:flex;flex-direction:column;gap:12px;padding:12px 0;min-height:600px}
+#controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#colorInput{width:140px;font-size:14px}
+#dispenseBtn{font-size:14px;padding:6px 14px;cursor:pointer}
+#palette{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+.swatch:hover{transform:scale(1.2)}
+.swatch.active{border-color:var(--color-text-primary)}
+#toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pipe-btn{padding:5px 10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.pipe-btn.selected{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}
+#hint{font-size:12px;color:var(--color-text-secondary)}
+#gameCanvas{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:crosshair;display:block}
+#status{font-size:13px;color:var(--color-text-secondary);min-height:18px}
+</style>
+<div id="app">
+  <div id="controls">
+    <input id="colorInput" type="text" placeholder="Type a color…" value="crimson"/>
+    <button id="dispenseBtn">Dispense ball ▶</button>
+    <div id="palette"></div>
+  </div>
+  <div id="toolbar">
+    <span style="font-size:13px;color:var(--color-text-secondary)">Pipe:</span>
+    <button class="pipe-btn selected" data-type="straight" title="Straight pipe (─)">─ Straight</button>
+    <button class="pipe-btn" data-type="l" title="L-bend pipe">L Bend</button>
+    <button class="pipe-btn" data-type="t" title="T-junction">T Junction</button>
+    <button class="pipe-btn" data-type="cross" title="+ Cross pipe">+ Cross</button>
+    <button class="pipe-btn" data-type="eraser" title="Erase pipe">✕ Erase</button>
+    <span style="font-size:12px;color:var(--color-text-secondary);margin-left:4px">R = rotate selected</span>
+  </div>
+  <div id="hint" style="font-size:12px;color:var(--color-text-secondary)">Left-click grid to place pipe · Right-click to rotate in place · Ball enters from the left edge</div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="status"></div>
+</div>
+<script>
+const COLS=18,ROWS=12,CELL=44;
+const canvas=document.getElementById('gameCanvas');
+canvas.width=COLS*CELL;canvas.height=ROWS*CELL;
+const ctx=canvas.getContext('2d');
+const colorInput=document.getElementById('colorInput');
+const dispenseBtn=document.getElementById('dispenseBtn');
+const statusEl=document.getElementById('status');
+
+const PRESETS=['crimson','dodgerblue','lime','gold','magenta','cyan','tomato','mediumslateblue'];
+const paletteEl=document.getElementById('palette');
+PRESETS.forEach(c=>{
+  const s=document.createElement('div');
+  s.className='swatch';s.style.background=c;s.title=c;
+  s.onclick=()=>{colorInput.value=c;updateSwatches();};
+  paletteEl.appendChild(s);
+});
+function updateSwatches(){
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active',s.title===colorInput.value));
+}
+colorInput.oninput=updateSwatches;
+updateSwatches();
+
+let selectedPipe='straight';
+let selectedRot=0;
+document.querySelectorAll('.pipe-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.pipe-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedPipe=btn.dataset.type;
+    selectedRot=0;
+    setStatus(selectedPipe!=='eraser'?`Selected: ${selectedPipe} (rotation ${selectedRot*90}°)`:'Eraser selected');
+  };
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'){selectedRot=(selectedRot+1)%4;setStatus(`Selected: ${selectedPipe} (rotation ${selectedRot*90}°)`);}
+});
+
+const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+
+function setStatus(msg){statusEl.textContent=msg;}
+
+function getCell(e){
+  const r=canvas.getBoundingClientRect();
+  const x=e.clientX-r.left,y=e.clientY-r.top;
+  const col=Math.floor(x/CELL),row=Math.floor(y/CELL);
+  if(col<0||col>=COLS||row<0||row>=ROWS)return null;
+  return{col,row};
+}
+
+canvas.addEventListener('click',e=>{
+  const c=getCell(e);if(!c)return;
+  if(selectedPipe==='eraser'){grid[c.row][c.col]=null;}
+  else{grid[c.row][c.col]={type:selectedPipe,rot:selectedRot};}
+  draw();
+});
+canvas.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const c=getCell(e);if(!c)return;
+  const cell=grid[c.row][c.col];
+  if(cell){cell.rot=(cell.rot+1)%4;draw();}
+});
+
+const DIRS={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
+const DIR_NAMES={U:'U',D:'D',L:'L',R:'R'};
+const OPPOSITE={U:'D',D:'U',L:'R',R:'L'};
+
+function rotateDirCW(d){return{U:'R',R:'D',D:'L',L:'U'}[d];}
+function rotateDir(d,times){let r=d;for(let i=0;i<times;i++)r=rotateDirCW(r);return r;}
+
+function getPipeExits(type,rot,entryDir){
+  const fromRot=d=>rotateDir(d,rot);
+  const toRot=d=>rotateDir(d,(4-rot)%4);
+  const localEntry=toRot(entryDir);
+  let localExits=[];
+  if(type==='straight'){
+    if(localEntry==='L')localExits=['R'];
+    else if(localEntry==='R')localExits=['L'];
+    else if(localEntry==='U')localExits=['D'];
+    else if(localEntry==='D')localExits=['U'];
+  } else if(type==='l'){
+    const lMap={L:['U'],U:['L'],R:['D'],D:['R']};
+    const rMap={R:['U'],U:['R'],L:['D'],D:['L']};
+    if(localEntry==='L')localExits=['U'];
+    else if(localEntry==='U')localExits=['L'];
+    else if(localEntry==='R')localExits=['D'];
+    else if(localEntry==='D')localExits=['R'];
+  } else if(type==='t'){
+    if(localEntry==='L'){localExits=['R','U'];}
+    else if(localEntry==='R'){localExits=['L','D'];}
+    else if(localEntry==='U'){localExits=['L','D'];}
+    else if(localEntry==='D'){localExits=['R','U'];}
+  } else if(type==='cross'){
+    if(localEntry==='L')localExits=['R'];
+    else if(localEntry==='R')localExits=['L'];
+    else if(localEntry==='U')localExits=['D'];
+    else if(localEntry==='D')localExits=['U'];
+  }
+  return localExits.map(fromRot);
+}
+
+const tAlternate={};
+
+let balls=[];
+let animId=null;
+
+function spawnBall(){
+  const color=colorInput.value.trim()||'crimson';
+  const row=1;
+  balls.push({x:-CELL/2,y:row*CELL+CELL/2,col:-1,row,dir:'R',color,speed:3,done:false,stuck:false,pendingExits:null});
+  setStatus(`Ball dispensed (${color}) → row ${row}`);
+  if(!animId)animId=requestAnimationFrame(loop);
+}
+
+dispenseBtn.onclick=spawnBall;
+colorInput.addEventListener('keydown',e=>{if(e.key==='Enter')spawnBall();});
+
+function advanceBall(ball){
+  const {col,row,dir}=ball;
+  const dc=DIRS[dir][0],dr=DIRS[dir][1];
+  const nc=col+dc,nr=row+dr;
+  if(nc<0||nc>=COLS||nr<0||nr>=ROWS){ball.done=true;return;}
+  const cell=grid[nr][nc];
+  if(!cell){ball.col=nc;ball.row=nr;ball.x=nc*CELL+CELL/2;ball.y=nr*CELL+CELL/2;return;}
+  const exits=getPipeExits(cell.type,cell.rot,OPPOSITE[dir]);
+  if(exits.length===0){ball.stuck=true;ball.done=true;return;}
+  let chosenExit;
+  if(exits.length===1){chosenExit=exits[0];}
+  else{
+    const key=`${nc},${nr}`;
+    tAlternate[key]=(tAlternate[key]||0)+1;
+    chosenExit=exits[(tAlternate[key]-1)%exits.length];
+  }
+  ball.col=nc;ball.row=nr;ball.x=nc*CELL+CELL/2;ball.y=nr*CELL+CELL/2;ball.dir=chosenExit;
+}
+
+function loop(){
+  balls=balls.filter(b=>!b.done||(b.done&&!b.stuck));
+  for(const ball of balls){
+    if(ball.done)continue;
+    const tx=ball.col<0?-CELL/2:ball.col*CELL+CELL/2;
+    const ty=ball.row*CELL+CELL/2;
+    const dx=tx-ball.x+(DIRS[ball.dir][0]*CELL);
+    const dy=ty-ball.y+(DIRS[ball.dir][1]*CELL);
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<ball.speed+1){advanceBall(ball);}
+    else{ball.x+=dx/dist*ball.speed;ball.y+=dy/dist*ball.speed;}
+    if(ball.col>=COLS)ball.done=true;
+  }
+  balls=balls.filter(b=>!b.done);
+  draw();
+  if(balls.length>0)animId=requestAnimationFrame(loop);
+  else animId=null;
+}
+
+const isDark=()=>window.matchMedia('(prefers-color-scheme:dark)').matches;
+
+function drawPipe(cx,cy,type,rot){
+  const dark=isDark();
+  const pipeCol=dark?'#9fa1a8':'#555';
+  const bgCol=dark?'#2a2a2c':'#e8e6df';
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot*Math.PI/2);
+  const r=CELL/2,hw=7,cap=4;
+  ctx.strokeStyle=pipeCol;ctx.lineWidth=hw*2;ctx.lineCap='round';
+  if(type==='straight'){
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+    ctx.strokeStyle=bgCol;ctx.lineWidth=hw;
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+  } else if(type==='l'){
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(0,0);ctx.lineTo(0,-r);ctx.stroke();
+    ctx.strokeStyle=bgCol;ctx.lineWidth=hw;
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(0,0);ctx.lineTo(0,-r);ctx.stroke();
+  } else if(type==='t'){
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-r);ctx.stroke();
+    ctx.strokeStyle=bgCol;ctx.lineWidth=hw;
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-r);ctx.stroke();
+  } else if(type==='cross'){
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(0,r);ctx.stroke();
+    ctx.strokeStyle=bgCol;ctx.lineWidth=hw;
+    ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(0,r);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRotArrow(cx,cy){
+  ctx.save();ctx.strokeStyle='rgba(130,130,130,0.45)';ctx.lineWidth=1;
+  ctx.font='10px var(--font-sans)';ctx.fillStyle='rgba(130,130,130,0.5)';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('↻',cx+CELL/2-7,cy+CELL/2-7);
+  ctx.restore();
+}
+
+let hoverCell=null;
+canvas.addEventListener('mousemove',e=>{hoverCell=getCell(e);draw();});
+canvas.addEventListener('mouseleave',()=>{hoverCell=null;draw();});
+
+function draw(){
+  const dark=isDark();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=dark?'#1a1a1c':'#f5f4ef';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle=dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.08)';
+  ctx.lineWidth=0.5;
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*CELL);ctx.lineTo(canvas.width,r*CELL);ctx.stroke();}
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*CELL,0);ctx.lineTo(c*CELL,canvas.height);ctx.stroke();}
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell=grid[r][c];
+      if(cell){drawPipe(c*CELL+CELL/2,r*CELL+CELL/2,cell.type,cell.rot);}
+    }
+  }
+  if(hoverCell&&selectedPipe!=='eraser'){
+    const{col,row}=hoverCell;
+    ctx.save();ctx.globalAlpha=0.35;
+    drawPipe(col*CELL+CELL/2,row*CELL+CELL/2,selectedPipe,selectedRot);
+    ctx.restore();
+  }
+  for(const ball of balls){
+    ctx.save();
+    ctx.beginPath();ctx.arc(ball.x,ball.y,CELL/2*0.45,0,Math.PI*2);
+    ctx.fillStyle=ball.color;ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+  }
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(grid[r][c])drawRotArrow(c*CELL,r*CELL);
+    }
+  }
+}
+draw();
+</script>
