@@ -515,6 +515,11 @@ exportJson.onclick = exportToJSON;
     const params = new URLSearchParams(location.search);
     let logId = params.get("log");
     if (!logId) {
+      // Show create new log link
+    }
+
+    let createNewLog = params.get("createNewLog");
+    if(createNewLog) {
       logId = crypto.randomUUID();
       history.replaceState({}, "", `?log=${logId}`);
     }
