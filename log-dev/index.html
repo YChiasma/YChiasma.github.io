@@ -163,6 +163,10 @@
       text-decoration: underline;
       cursor: pointer;
     }
+
+    #listPage {
+      display: none;
+    }
   </style>
 
 
@@ -170,18 +174,24 @@
 
 <body>
 
-  <h1 id="h1">Shared Log</h1>
-  <p id="shareLink"></p>
+  <div id="logPage">
+    <h1 id="h1">Shared Log</h1>
+    <p id="shareLink"></p>
+  
+    <div class="button-container">
+      <button id="exportText">Export Text</button>
+      <button id="exportJson">Export JSON</button>
+      <button id="addCheckbox">☐ Checkbox</button>
+    </div>
 
-  <div class="button-container">
-    <button id="exportText">Export Text</button>
-    <button id="exportJson">Export JSON</button>
-    <button id="addCheckbox">☐ Checkbox</button>
+    <textarea id="entryText"></textarea>
+    <button id="addEntry">Add Entry</button>
+    <div id="entries"></div>
   </div>
 
-  <textarea id="entryText"></textarea>
-  <button id="addEntry">Add Entry</button>
-  <div id="entries"></div>
+  <div id="listPage">
+    <button id="createNewLog">Create New Log</button>
+  </div>
 
   <script>
 
@@ -516,6 +526,8 @@ exportJson.onclick = exportToJSON;
     let logId = params.get("log");
     if (!logId) {
       // Show create new log link
+      document.getElementById("listPage").style.display = "";
+      document.getElementById("logPage").style.display = "none";
     }
 
     let createNewLog = params.get("createNewLog");
