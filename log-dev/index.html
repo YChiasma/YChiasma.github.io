@@ -535,6 +535,14 @@ exportJson.onclick = exportToJSON;
       logId = crypto.randomUUID();
       history.replaceState({}, "", `?log=${logId}`);
     }
+
+    const createNewLogButton = document.getElementById("createNewLog");
+    createNewLogButton.addEventListener(() => {
+      document.getElementById("listPage").style.display = "none";
+      document.getElementById("logPage").style.display = "unset";
+      history.pushState({}, "", "?createNewLog=1");
+    });
+
     document.getElementById("shareLink").textContent =
       `${location.origin}${location.pathname}?log=${logId}`;
 
