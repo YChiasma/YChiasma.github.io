@@ -537,7 +537,7 @@ exportJson.onclick = exportToJSON;
     }
 
     const createNewLogButton = document.getElementById("createNewLog");
-    createNewLogButton.addEventListener(() => {
+    createNewLogButton.addEventListener("click", () => {
       document.getElementById("listPage").style.display = "none";
       document.getElementById("logPage").style.display = "unset";
       history.pushState({}, "", "?createNewLog=1");
