@@ -478,6 +478,26 @@ async function exportToJSON(){
 
 exportJson.onclick = exportToJSON;
 
+function renderLine(line) {
+
+  let html = escapeHTML(line);
+
+  // Full URLs
+  html = html.replace(
+    /(https?:\/\/[^\s]*\?log=([0-9a-f-]{36}))/gi,
+    (_, url) => `<a href="${url}">${url}</a>`
+  );
+
+  // Relative ?log= links
+  html = html.replace(
+    /(\?log=([0-9a-f-]{36}))/gi,
+    (_, link) =>
+      `<a href="${link}">${link}</a>`
+  );
+
+  return html;
+}
+
     function escapeHTML(s) {
       return s.replace(/[&<>"']/g, c =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
@@ -493,10 +513,10 @@ exportJson.onclick = exportToJSON;
         const match = line.match(/^\[( |x)\]\s?(.*)$/i);
 
         if (!match)
-          return escapeHTML(line);
+          return renderLine(line);
 
         const checked = match[1].toLowerCase() === "x";
-        const label = escapeHTML(match[2]);
+        const label = renderLine(match[2]);
 
         return `
       <label>
