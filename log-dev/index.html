@@ -533,7 +533,7 @@ exportJson.onclick = exportToJSON;
     let createNewLog = params.get("createNewLog");
     if(createNewLog) {
       logId = crypto.randomUUID();
-      history.replaceState({}, "", `?log=${logId}`);
+      window.location = `?log=${logId}`;
     }
 
     const createNewLogButton = document.getElementById("createNewLog");
