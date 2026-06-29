@@ -163,6 +163,10 @@
       text-decoration: underline;
       cursor: pointer;
     }
+
+    #listPage {
+      display: none;
+    }
   </style>
 
 
@@ -170,18 +174,24 @@
 
 <body>
 
-  <h1 id="h1">Shared Log</h1>
-  <p id="shareLink"></p>
+  <div id="logPage">
+    <h1 id="h1">Shared Log</h1>
+    <p id="shareLink"></p>
+  
+    <div class="button-container">
+      <button id="exportText">Export Text</button>
+      <button id="exportJson">Export JSON</button>
+      <button id="addCheckbox">☐ Checkbox</button>
+    </div>
 
-  <div class="button-container">
-    <button id="exportText">Export Text</button>
-    <button id="exportJson">Export JSON</button>
-    <button id="addCheckbox">☐ Checkbox</button>
+    <textarea id="entryText"></textarea>
+    <button id="addEntry">Add Entry</button>
+    <div id="entries"></div>
   </div>
 
-  <textarea id="entryText"></textarea>
-  <button id="addEntry">Add Entry</button>
-  <div id="entries"></div>
+  <div id="listPage">
+    <button id="createNewLog">Create New Log</button>
+  </div>
 
   <script>
 
@@ -468,6 +478,26 @@ async function exportToJSON(){
 
 exportJson.onclick = exportToJSON;
 
+function renderLine(line) {
+
+  let html = escapeHTML(line);
+
+  // Full URLs
+  html = html.replace(
+    /(https?:\/\/[^\s]*\?log=([0-9a-f-]{36}))/gi,
+    (_, url) => `<a href="${url}">${url}</a>`
+  );
+
+  // Relative ?log= links
+  html = html.replace(
+    /(\?log=([0-9a-f-]{36}))/gi,
+    (_, link) =>
+      `<a href="${link}">${link}</a>`
+  );
+
+  return html;
+}
+
     function escapeHTML(s) {
       return s.replace(/[&<>"']/g, c =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
@@ -483,10 +513,10 @@ exportJson.onclick = exportToJSON;
         const match = line.match(/^\[( |x)\]\s?(.*)$/i);
 
         if (!match)
-          return escapeHTML(line);
+          return renderLine(line);
 
         const checked = match[1].toLowerCase() === "x";
-        const label = escapeHTML(match[2]);
+        const label = renderLine(match[2]);
 
         return `
       <label>
@@ -515,9 +545,24 @@ exportJson.onclick = exportToJSON;
     const params = new URLSearchParams(location.search);
     let logId = params.get("log");
     if (!logId) {
-      logId = crypto.randomUUID();
-      history.replaceState({}, "", `?log=${logId}`);
+      // Show create new log link
+      document.getElementById("listPage").style.display = "unset";
+      document.getElementById("logPage").style.display = "none";
     }
+
+    let createNewLog = params.get("createNewLog");
+    if(createNewLog) {
+      logId = crypto.randomUUID();
+      window.location = `?log=${logId}`;
+    }
+
+    const createNewLogButton = document.getElementById("createNewLog");
+    createNewLogButton.addEventListener("click", () => {
+      document.getElementById("listPage").style.display = "none";
+      document.getElementById("logPage").style.display = "unset";
+      history.pushState({}, "", "?createNewLog=1");
+    });
+
     document.getElementById("shareLink").textContent =
       `${location.origin}${location.pathname}?log=${logId}`;
 
