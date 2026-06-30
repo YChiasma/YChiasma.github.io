@@ -484,7 +484,7 @@ function renderLine(line) {
 
   // Full URLs
   html = html.replace(
-    /(https?:\/\/[^\s]*\?log=([0-9a-f-]{36}))/gi,
+    /(https?:\/\/[^\s]*)/gi,
     (_, url) => `<a href="${url}">${url}</a>`
   );
 
